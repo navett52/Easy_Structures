@@ -13,11 +13,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Jeff/Downloads/craftbukkit-1.7.10-R0.1-20140817.180155-16.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="http://jd.bukkit.org/dev/apidocs/"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
@@ -28,10 +23,11 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Jeff/Downloads/worldedit-5.6.3.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="http://docs.sk89q.com/worldedit/apidocs/"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="I:/Minecraft Plugins/bukkit-1.7.10-R0.1-20140817.175650-8.jar"/>
+	<classpathentry kind="lib" path="I:/Minecraft Plugins/worldedit-bukkit-6.1.2.jar"/>
+	<classpathentry kind="lib" path="I:/Minecraft Plugins/Multiverse-Core-2.4.jar"/>
+	<classpathentry kind="lib" path="E:/Minecraft Plugins/bukkit-1.7.10-R0.1-20140817.175650-8.jar"/>
+	<classpathentry kind="lib" path="E:/Minecraft Plugins/Multiverse-Core-2.4.jar"/>
+	<classpathentry kind="lib" path="E:/Minecraft Plugins/worldedit-bukkit-6.1.2.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

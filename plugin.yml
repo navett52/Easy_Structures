@@ -4,6 +4,6 @@ version: 0.2
 author: WorldSchematics
 load: startup
 description: Spawns .schematics into newly generated chunks.
-website: https://github.com/robotnikthingy/WorldSchematics
+website: https://github.com/navett52/Easy_Structures
 commands:
 permissions:

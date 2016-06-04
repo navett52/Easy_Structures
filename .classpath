@@ -23,11 +23,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="I:/Minecraft Plugins/bukkit-1.7.10-R0.1-20140817.175650-8.jar"/>
-	<classpathentry kind="lib" path="I:/Minecraft Plugins/worldedit-bukkit-6.1.2.jar"/>
-	<classpathentry kind="lib" path="I:/Minecraft Plugins/Multiverse-Core-2.4.jar"/>
-	<classpathentry kind="lib" path="E:/Minecraft Plugins/bukkit-1.7.10-R0.1-20140817.175650-8.jar"/>
-	<classpathentry kind="lib" path="E:/Minecraft Plugins/Multiverse-Core-2.4.jar"/>
-	<classpathentry kind="lib" path="E:/Minecraft Plugins/worldedit-bukkit-6.1.2.jar"/>
+	<classpathentry kind="lib" path="E:/MC Stuff/Libraries/craftbukkit-latest.jar"/>
+	<classpathentry kind="lib" path="E:/MC Stuff/Libraries/worldedit-bukkit-6.1.2.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

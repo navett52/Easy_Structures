@@ -7,11 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.craftbukkit.v1_9_R2.CraftServer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,12 +19,11 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
 
-import net.minecraft.server.v1_9_R2.MinecraftServer;
-import net.minecraft.server.v1_9_R2.PlayerList;
-
 public class WorldFeatures extends JavaPlugin {
+	
+	private static WorldFeatures plugin;
+	
 	public static WorldFeatures instance;
-
     public static Logger log;
     private static final HashMap<Player, PlayerInfo> playerInfos = new HashMap<Player, PlayerInfo>();
     private static final HashMap<String, BetterConfiguration> configs = new HashMap<String, BetterConfiguration>();
@@ -104,6 +101,10 @@ public class WorldFeatures extends JavaPlugin {
     	return error;
     }
     
+    public static List<World> getWorlds() {
+    	return plugin.getServer().getWorlds();
+    }
+    
 	/**
 	 * Creates folders to hold schematics to be generated into the world
 	 * @return 0 if every folder has been created
@@ -115,61 +116,66 @@ public class WorldFeatures extends JavaPlugin {
 		int BiomeFolderCount = 0;
 		
 		int WorldFolderCount = 0;
-		
-		CraftServer server = (CraftServer) Bukkit.getServer();
 		//Creating an ArrayList<> to hold the Biome ENUM values to make sure all biome folders are named appropriately and all biomes are accounted for
 		//Using ArrayList<> so if MC updates and adds new biomes we don't have to worry about updating this.
 		ArrayList<Biome> biomes = new ArrayList<Biome>(Arrays.asList(Biome.values()));
-		ArrayList<World> worlds = new ArrayList<World>(server.getWorlds());
-		
-		
+	//	ArrayList<World> worlds = new ArrayList<World>(Bukkit.getWorlds());
+	
 		//**DEBUGGING**\\
-		CraftServer server1 = (CraftServer) Bukkit.getServer();
-		ArrayList<World> worlds2 = (ArrayList<World>) server1.getWorlds();
-		System.out.println(worlds2.size()); //prints 0
 		
-		for (World w1 : Bukkit.getWorlds()) {
-			System.out.println(w1.getName());//prints null
-		}
+		List<World> worlds = new ArrayList<World>(getWorlds());
+		System.out.println(worlds.size());
 		
-		System.out.println(Bukkit.getName());//prints server name (CraftBukkit i think)
-		
-		System.out.println(Bukkit.getServer().getName());//prints server name (CraftBukkit i think)
-		
-		System.out.println(Bukkit.getWorld("world"));//prints null
-		
-		for (World worlds1 : Bukkit.getWorlds()) {
-			System.out.println(worlds1.getName()); //prints nothing
-		}
-		
-		/*for (int i = 0; i < biomes.size(); i++) {
-			System.out.println(biomes.get(i));  //Successful: Prints all biome names; un-needed
-		} */
-		
-		for (int i = 0; i < worlds.size(); i++) {
-			System.out.println(worlds.get(i));//prints nothing
-		}
-		
-		System.out.println(worlds.size());//prints 0
-		
-		log.info(Bukkit.getWorlds().toString());//gives [] 
-		
-		System.out.println(Bukkit.getWorlds().size());//prints 0
-		
-		System.out.println(Bukkit.getWorlds().size());//prints 0
-		
-		//Failed attempt at using Multiverse
-		/*MultiverseCore mvc = new MultiverseCore();
-		Collection<MultiverseWorld> mvw = new ArrayList<MultiverseWorld>();
-		mvw = mvc.getMVWorldManager().getMVWorlds();
-		System.out.println(mvw.size());
-		MultiverseWorld[] mvwa = new MultiverseWorld[mvw.size()];
-		mvw.toArray(mvwa);
-		System.out.println(mvwa.length);
-		for (int i = 0; i < mvwa.length; i++) {
-			System.out.println(mvwa[i]);
-		}*/
-		
+	//	ArrayList<WorldServer> worlds = new ArrayList<WorldServer>(MinecraftServer.getServer().worldServer);
+	//	System.out.println(worlds.size());
+	//	ArrayList<MultiverseWorld> mvworlds = new ArrayList<MultiverseWorld>(worldmanager.getMVWorlds());
+	//	System.out.println(mvworlds.isEmpty());
+		//CraftServer server1 = new CraftServer(server, server.getPlayerList());
+		//ArrayList<World> worlds2 = (ArrayList<World>) server1.getWorlds();
+		//System.out.println(worlds2.size()); //prints 0
+			/*
+			for (World w1 : Bukkit.getWorlds()) {
+				System.out.println(w1.getName());//prints null
+			}
+			
+			System.out.println(Bukkit.getName());//prints server name (CraftBukkit i think)
+			
+			System.out.println(Bukkit.getServer().getName());//prints server name (CraftBukkit i think)
+			
+			System.out.println(Bukkit.getWorld("world"));//prints null
+			
+			for (World worlds1 : Bukkit.getWorlds()) {
+				System.out.println(worlds1.getName()); //prints nothing
+			}
+			
+			for (int i = 0; i < biomes.size(); i++) {
+				System.out.println(biomes.get(i));  //Successful: Prints all biome names; un-needed
+			}
+			
+			for (int i = 0; i < worlds.size(); i++) {
+				System.out.println(worlds.get(i));//prints nothing
+			}
+			
+			System.out.println(worlds.size());//prints 0
+			
+			log.info(Bukkit.getWorlds().toString());//gives [] 
+			
+			System.out.println(Bukkit.getWorlds().size());//prints 0
+			
+			System.out.println(Bukkit.getWorlds().size());//prints 0
+			
+			//Failed attempt at using Multiverse
+			MultiverseCore mvc = new MultiverseCore();
+			Collection<MultiverseWorld> mvw = new ArrayList<MultiverseWorld>();
+			mvw = mvc.getMVWorldManager().getMVWorlds();
+			System.out.println(mvw.size());
+			MultiverseWorld[] mvwa = new MultiverseWorld[mvw.size()];
+			mvw.toArray(mvwa);
+			System.out.println(mvwa.length);
+			for (int i = 0; i < mvwa.length; i++) {
+				System.out.println(mvwa[i]);
+			}
+			*/
 		//**DEBUGGING**\\
 		
 		
@@ -178,36 +184,36 @@ public class WorldFeatures extends JavaPlugin {
 		 * When making the generator method we can seek the file paths locally.
 		 * Also cycles through the Biome[] and uses it to name all Biome folders
 		 */
-		for (int i = 0; i < worlds.size(); i++) {
-			File dirInit = new File("plugins/Easy_Structures/Schematics/" + worlds.get(i).getName());
-			boolean makeDirInit = dirInit.mkdirs();
-			if (makeDirInit) {
-				WorldFolderCount++;
-			}
-			for (int j = 0; j < biomes.size(); j++) {
-				//Declaring and instantiating a File directory object with the path we want
-				File dirBiomes = new File("plugins/Easy_Structures/Schematics/" + worlds.get(i) + "/" + biomes.get(j));
-				//Creating the directories with mkdirs() method. returns true if successful
-				boolean makeDirBiomes = dirBiomes.mkdirs();
-				//If the making of a biome folder was successful increment BiomeFolderCount
-				if (makeDirBiomes) {
-					BiomeFolderCount++;
-				}
-			}
-		}
-		//Sees how many folders were created
-		if (BiomeFolderCount == biomes.size() && WorldFolderCount == worlds.size()) {
-			//If all Biome folders were made (if it counts the same amount of folders as the size of the arraylist)
-			log.fine("[Easy Structures] All folders Created successfully. Probably your fisrt time running this plugin.");
-			log.fine("[Easy Structures] You can now put schematics in the appropriate folders to be generated.");
-		} else if (BiomeFolderCount < biomes.size() && BiomeFolderCount > 0 || WorldFolderCount < worlds.size() && WorldFolderCount > 0) {
-			//If at least 1 folder was made
-			log.warning("[Easy Structures] Some folders Created successfully. Minecraft probably added some new Biomes and the list is updating or you added more worlds to your server.");
-			log.warning("[Easy Structures] You can now put schematics in the appropriate folder for the new world or biome to be generated.");
-		} else {
-			//if no folders were made
-			log.severe("[Easy Structures] No folders generated. The folders might have already been made.");
-		}
+	//	for (int i = 0; i < worlds.size(); i++) {
+	//		File dirInit = new File("plugins/Easy_Structures/Schematics/" + worlds.get(i).getName());
+	//		boolean makeDirInit = dirInit.mkdirs();
+	//		if (makeDirInit) {
+	//			WorldFolderCount++;
+	//		}
+	//		for (int j = 0; j < biomes.size(); j++) {
+	//			//Declaring and instantiating a File directory object with the path we want
+	//			File dirBiomes = new File("plugins/Easy_Structures/Schematics/" + worlds.get(i) + "/" + biomes.get(j));
+	//			//Creating the directories with mkdirs() method. returns true if successful
+	//			boolean makeDirBiomes = dirBiomes.mkdirs();
+	//			//If the making of a biome folder was successful increment BiomeFolderCount
+	//			if (makeDirBiomes) {
+	//				BiomeFolderCount++;
+	//			}
+	//		}
+	//	}
+	//	//Sees how many folders were created
+	//	if (BiomeFolderCount == biomes.size() && WorldFolderCount == worlds.size()) {
+	//		//If all Biome folders were made (if it counts the same amount of folders as the size of the arraylist)
+	//		log.fine("[Easy Structures] All folders Created successfully. Probably your fisrt time running this plugin.");
+	//		log.fine("[Easy Structures] You can now put schematics in the appropriate folders to be generated.");
+	//	} else if (BiomeFolderCount < biomes.size() && BiomeFolderCount > 0 || WorldFolderCount < worlds.size() && WorldFolderCount > 0) {
+	//		//If at least 1 folder was made
+	//		log.warning("[Easy Structures] Some folders Created successfully. Minecraft probably added some new Biomes and the list is updating or you added more worlds to your server.");
+	//		log.warning("[Easy Structures] You can now put schematics in the appropriate folder for the new world or biome to be generated.");
+	//	} else {
+	//		//if no folders were made
+	//		log.severe("[Easy Structures] No folders generated. The folders might have already been made.");
+	//	}
 	}
     
  

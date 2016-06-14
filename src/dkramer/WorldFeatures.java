@@ -1,6 +1,7 @@
 package dkramer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,7 +42,11 @@ public class WorldFeatures extends JavaPlugin {
     public void onEnable() {
     	log = getLogger();
     	instance = this;
-        createFolders();
+    	ArrayList<String> Worlds = isWorldFolder();
+    	for (int i = 0; i < Worlds.size(); i++) {
+    		System.out.println(Worlds.get(i));
+    	}
+        //createFolders();
         //Confusing stuff to pass this to that to this and back
         c1 = new ChunkListener(this);
         p1 = new PlayerListener(this);
@@ -104,6 +109,35 @@ public class WorldFeatures extends JavaPlugin {
     public static List<World> getWorlds() {
     	return plugin.getServer().getWorlds();
     }
+    
+	public ArrayList<String> isWorldFolder() {
+		ArrayList<String> Worlds = new ArrayList<String>();
+		File serverPath = new File(System.getProperty("user.dir"));
+		String[] serverFiles = serverPath.list();
+		//System.out.println("Are the serverFiles/folders populating the array?: " + serverFiles.length); //Checking to see if the Array was populating
+		for (int i = 0; i < serverFiles.length; i++) {
+			File FileOrFolder = new File(serverPath + "/" + serverFiles[i]);
+			/*try {
+				System.out.println("The " + i + " Folder's or File's path is: " + FileOrFolder.getCanonicalPath()); //Making sure file paths were formatted correctly
+			} catch (IOException e) {
+				e.printStackTrace();
+			}*/
+			if (FileOrFolder.isDirectory()) {
+				String[] FolderList = FileOrFolder.list();
+				//System.out.println(FolderList.length);
+				for (int j = 0; j < FolderList.length; j++) {
+					//System.out.println(FolderList[j]); //Making sure it was seeing the files/folders in the folder
+					if (FolderList[j].compareTo("level.dat") == 0) {
+						//System.out.println("This folder is a world folder"); //Making sure it was seeing level.dat files
+						Worlds.add(serverFiles[i]);
+					}
+				}
+			} /*else {
+				System.out.println("This is just a file"); //Letting me know when it was just hitting a file
+			}*/
+		}
+		return Worlds;
+	}
     
 	/**
 	 * Creates folders to hold schematics to be generated into the world

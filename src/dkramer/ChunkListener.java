@@ -91,12 +91,12 @@ public class ChunkListener implements Listener {
         if(rand.nextInt(100) + 1 > plugin.getConfig().getInt("chunkchance")) {
         	if (plugin.getConfig().getBoolean("debug") == true)
         	{
-        		System.out.println("[WorldSchematics] Not going to load schematics in newly created chunk");
+        		WorldFeatures.log.info("Not going to load schematics in newly created chunk");
         	}        	
             return;
         }
         
-        String worldPath = "plugins/WorldSchematics/Schematics/" + wrld.getName();
+        String worldPath = "plugins/Easy_Structures/Schematics/" + "/" + wrld.getName();
         ArrayList<String> schemeNames = new ArrayList<String>();
         String children[] = new File(worldPath).list();
         if(children != null) {

@@ -1,7 +1,6 @@
 package dkramer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,11 +41,11 @@ public class WorldFeatures extends JavaPlugin {
     public void onEnable() {
     	log = getLogger();
     	instance = this;
-    	ArrayList<String> Worlds = isWorldFolder();
-    	for (int i = 0; i < Worlds.size(); i++) {
-    		System.out.println(Worlds.get(i));
-    	}
-        //createFolders();
+    	
+    	//Nave's Additions
+        createFolders();
+    	//End Nave's Additions
+    	
         //Confusing stuff to pass this to that to this and back
         c1 = new ChunkListener(this);
         p1 = new PlayerListener(this);
@@ -110,31 +109,37 @@ public class WorldFeatures extends JavaPlugin {
     	return plugin.getServer().getWorlds();
     }
     
-	public ArrayList<String> isWorldFolder() {
+    /**
+     * Get's a list of the worlds 
+     * @return String[] holding the names of the worlds
+     */
+	public ArrayList<String> getWorldFolders() {
+		//Create the ArrayList to be returned later
 		ArrayList<String> Worlds = new ArrayList<String>();
+		//Grabbing the current file path the plugin JAR is in to look at the files inside it
 		File serverPath = new File(System.getProperty("user.dir"));
+		//Transferring the names of the files/directories in the current path to a String[]
 		String[] serverFiles = serverPath.list();
-		//System.out.println("Are the serverFiles/folders populating the array?: " + serverFiles.length); //Checking to see if the Array was populating
+		/**
+		 * Cycles through all files/directories and if one is a directory looks inside for a level.dat
+		 * file since every world has one.
+		 */
 		for (int i = 0; i < serverFiles.length; i++) {
+			//tacking the file/directory names from the serverFiles String[] to the server path
 			File FileOrFolder = new File(serverPath + "/" + serverFiles[i]);
-			/*try {
-				System.out.println("The " + i + " Folder's or File's path is: " + FileOrFolder.getCanonicalPath()); //Making sure file paths were formatted correctly
-			} catch (IOException e) {
-				e.printStackTrace();
-			}*/
+			//Checking if something is a file/directory
 			if (FileOrFolder.isDirectory()) {
+				//If it is a directory, grab the names of all the files/directories inside of it
 				String[] FolderList = FileOrFolder.list();
-				//System.out.println(FolderList.length);
+				//Cycles through all files/directories inside the directory we just found
 				for (int j = 0; j < FolderList.length; j++) {
-					//System.out.println(FolderList[j]); //Making sure it was seeing the files/folders in the folder
+					//Checks to see if the current Directory we are in holds a level.dat file
 					if (FolderList[j].compareTo("level.dat") == 0) {
-						//System.out.println("This folder is a world folder"); //Making sure it was seeing level.dat files
+						//If there is a level.dat then it is a world folder so we add the name of the folder to the Worlds[]
 						Worlds.add(serverFiles[i]);
 					}
 				}
-			} /*else {
-				System.out.println("This is just a file"); //Letting me know when it was just hitting a file
-			}*/
+			}
 		}
 		return Worlds;
 	}
@@ -148,25 +153,26 @@ public class WorldFeatures extends JavaPlugin {
 	public static void createFolders() {
 		//Creating a variable to count the number of biome folders to make sure all are getting created
 		int BiomeFolderCount = 0;
-		
+		//Creating a variable to count the number of world folders to make sure all are getting created
 		int WorldFolderCount = 0;
 		//Creating an ArrayList<> to hold the Biome ENUM values to make sure all biome folders are named appropriately and all biomes are accounted for
 		//Using ArrayList<> so if MC updates and adds new biomes we don't have to worry about updating this.
 		ArrayList<Biome> biomes = new ArrayList<Biome>(Arrays.asList(Biome.values()));
-	//	ArrayList<World> worlds = new ArrayList<World>(Bukkit.getWorlds());
+		//Creating an ArrayList<> to hold all the world names
+		ArrayList<String> worlds = new ArrayList<String>(plugin.getWorldFolders());
 	
-		//**DEBUGGING**\\
+		//**********************DEBUGGING**********************\\
 		
-		List<World> worlds = new ArrayList<World>(getWorlds());
-		System.out.println(worlds.size());
+		    //List<World> worlds = new ArrayList<World>(getWorlds());
+		    //System.out.println(worlds.size());
 		
-	//	ArrayList<WorldServer> worlds = new ArrayList<WorldServer>(MinecraftServer.getServer().worldServer);
-	//	System.out.println(worlds.size());
-	//	ArrayList<MultiverseWorld> mvworlds = new ArrayList<MultiverseWorld>(worldmanager.getMVWorlds());
-	//	System.out.println(mvworlds.isEmpty());
-		//CraftServer server1 = new CraftServer(server, server.getPlayerList());
-		//ArrayList<World> worlds2 = (ArrayList<World>) server1.getWorlds();
-		//System.out.println(worlds2.size()); //prints 0
+		    //ArrayList<WorldServer> worlds = new ArrayList<WorldServer>(MinecraftServer.getServer().worldServer);
+		    //System.out.println(worlds.size());
+		    //ArrayList<MultiverseWorld> mvworlds = new ArrayList<MultiverseWorld>(worldmanager.getMVWorlds());
+		    //System.out.println(mvworlds.isEmpty());
+		    //CraftServer server1 = new CraftServer(server, server.getPlayerList());
+		    //ArrayList<World> worlds2 = (ArrayList<World>) server1.getWorlds();
+		    //System.out.println(worlds2.size()); //prints 0
 			/*
 			for (World w1 : Bukkit.getWorlds()) {
 				System.out.println(w1.getName());//prints null
@@ -210,7 +216,7 @@ public class WorldFeatures extends JavaPlugin {
 				System.out.println(mvwa[i]);
 			}
 			*/
-		//**DEBUGGING**\\
+		//**********************DEBUGGING**********************\\
 		
 		
 		/**
@@ -218,37 +224,41 @@ public class WorldFeatures extends JavaPlugin {
 		 * When making the generator method we can seek the file paths locally.
 		 * Also cycles through the Biome[] and uses it to name all Biome folders
 		 */
-	//	for (int i = 0; i < worlds.size(); i++) {
-	//		File dirInit = new File("plugins/Easy_Structures/Schematics/" + worlds.get(i).getName());
-	//		boolean makeDirInit = dirInit.mkdirs();
-	//		if (makeDirInit) {
-	//			WorldFolderCount++;
-	//		}
-	//		for (int j = 0; j < biomes.size(); j++) {
-	//			//Declaring and instantiating a File directory object with the path we want
-	//			File dirBiomes = new File("plugins/Easy_Structures/Schematics/" + worlds.get(i) + "/" + biomes.get(j));
-	//			//Creating the directories with mkdirs() method. returns true if successful
-	//			boolean makeDirBiomes = dirBiomes.mkdirs();
-	//			//If the making of a biome folder was successful increment BiomeFolderCount
-	//			if (makeDirBiomes) {
-	//				BiomeFolderCount++;
-	//			}
-	//		}
-	//	}
-	//	//Sees how many folders were created
-	//	if (BiomeFolderCount == biomes.size() && WorldFolderCount == worlds.size()) {
-	//		//If all Biome folders were made (if it counts the same amount of folders as the size of the arraylist)
-	//		log.fine("[Easy Structures] All folders Created successfully. Probably your fisrt time running this plugin.");
-	//		log.fine("[Easy Structures] You can now put schematics in the appropriate folders to be generated.");
-	//	} else if (BiomeFolderCount < biomes.size() && BiomeFolderCount > 0 || WorldFolderCount < worlds.size() && WorldFolderCount > 0) {
-	//		//If at least 1 folder was made
-	//		log.warning("[Easy Structures] Some folders Created successfully. Minecraft probably added some new Biomes and the list is updating or you added more worlds to your server.");
-	//		log.warning("[Easy Structures] You can now put schematics in the appropriate folder for the new world or biome to be generated.");
-	//	} else {
-	//		//if no folders were made
-	//		log.severe("[Easy Structures] No folders generated. The folders might have already been made.");
-	//	}
+		for (int i = 0; i < worlds.size(); i++) {
+			//Creating each world folder
+			File dirInit = new File("plugins/Easy_Structures/Schematics/" + "/" + worlds.get(i));
+			//Creating each directory
+			boolean makeDirInit = dirInit.mkdirs();
+			//Checking to see if it was created successfully
+			if (makeDirInit) {
+				//Add to World Folder Count
+				WorldFolderCount++;
+			}
+			//Creating the Biomes folders inside of the worlds folders
+			for (int j = 0; j < biomes.size(); j++) {
+				//Declaring and instantiating a File directory object with the path we want
+				File dirBiomes = new File("plugins/Easy_Structures/Schematics/" + "/" + worlds.get(i) + "/" + biomes.get(j));
+				//Creating the directories with mkdirs() method. returns true if successful
+				boolean makeDirBiomes = dirBiomes.mkdirs();
+				//If the making of a biome folder was successful increment BiomeFolderCount
+				if (makeDirBiomes) {
+					BiomeFolderCount++;
+				}
+			}
+		}
+		//Sees how many folders were created
+		if (BiomeFolderCount == biomes.size() * worlds.size() && WorldFolderCount == worlds.size()) {
+			//If all Biome folders were made (if it counts the same amount of folders as the size of the arraylist)
+			log.info("All folders Created successfully. Probably your fisrt time running this plugin.");
+			log.info("You can now put schematics in the appropriate folders to be generated.");
+		} else if (BiomeFolderCount < biomes.size() * worlds.size() && BiomeFolderCount > 0 || WorldFolderCount < worlds.size() && WorldFolderCount > 0) {
+			//If at least 1 folder was made
+			log.info("Some folders Created successfully. Minecraft probably added some new Biomes and the list is updating or you added more worlds to your server.");
+			log.info("You can now put schematics in the appropriate folder for the new world or biome to be generated.");
+		} else {
+			//if no folders were made
+			log.info("No folders generated. The folders might have already been made.");
+		}
 	}
-    
  
 }

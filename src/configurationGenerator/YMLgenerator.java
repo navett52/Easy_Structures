@@ -33,6 +33,7 @@ public class YMLgenerator
 	public void generateFile(String fileName)
 	{
 		this.fileName = fileName;
+		fileName = fileName + ".yml";
 		//Creates a new file object with the file name
 		File file = new File(fileName);
 		

@@ -9,7 +9,7 @@ public class Main
 		YMLgenerator yml = new YMLgenerator();
 		
 		//calls the method to create a blank yml file with a given name
-		yml.generateFile("Schematic.yml");
+		yml.generateFile("Schematic");
 	}
 
 }

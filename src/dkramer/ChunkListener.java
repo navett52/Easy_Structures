@@ -80,7 +80,9 @@ public class ChunkListener implements Listener {
         	&& loadBlockChunk(randX, bHeight, randZ + bredth).getBiome().toString().equals(biome) 
         	&& loadBlockChunk(randX + width, bHeight, randZ + bredth).getBiome().toString().equals(biome);
     }
-
+    
+    
+    
     @EventHandler
     public void onChunkPopulate(ChunkPopulateEvent event) {
 //    	System.out.println("[WorldSchematics] New chunk created");
@@ -92,7 +94,7 @@ public class ChunkListener implements Listener {
         	if (plugin.getConfig().getBoolean("debug") == true)
         	{
         		WorldFeatures.log.info("Not going to load schematics in newly created chunk");
-        	}        	
+        	}
             return;
         }
         
@@ -102,7 +104,7 @@ public class ChunkListener implements Listener {
         if(children != null) {
         	if (plugin.getConfig().getBoolean("debug") == true)
         	{
-        		System.out.println("[WorldSchematics] Found schematics in folder: " + wrld.getName());	
+        		WorldFeatures.log.info("Found schematics in folder: " + wrld.getName());	
         	}   	
             for(int ab = 0; ab < children.length; ab++) {
             	String fileType = children[ab].substring(children[ab].indexOf('.') + 1);
@@ -114,7 +116,7 @@ public class ChunkListener implements Listener {
         
         
         if(schemeNames.size() == 0) {
-        	System.out.println("[WorldSchematics] Did not find any schematics in folder: " + wrld.getName() + "!");
+        	WorldFeatures.log.info("Did not find any schematics in folder: " + wrld.getName() + "!");
             return;
         }
         

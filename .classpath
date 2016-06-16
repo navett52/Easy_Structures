@@ -23,7 +23,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="I:/MC Stuff/Libraries/bukkit-1.9.4-R0.1-SNAPSHOT-latest-shaded.jar"/>
-	<classpathentry kind="lib" path="I:/MC Stuff/Libraries/worldedit-bukkit-6.1.2.jar"/>
+	<classpathentry kind="lib" path="F:/MC Stuff/Libraries/bukkit-1.9.4-R0.1-SNAPSHOT-latest-shaded.jar"/>
+	<classpathentry kind="lib" path="F:/MC Stuff/Libraries/worldedit-bukkit-6.1.2.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -68,58 +68,101 @@ public class ChunkListener implements Listener {
         boolean canSpawn = true;
         //Getting the maxHeight of the world
         int maxHeight = world.getMaxHeight() - 1;
-        //Creating the file paths to be looked into for schematic files
-        String worldPath = "plugins/Easy_Structures/Schematics/" + "/" + world.getName();
-        String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, bHeight, randZ).getBiome().toString();
-        //Creating arraylists to hold the schematic files from the appropriate folders
-		ArrayList<String> schematicsForBiomeGen = new ArrayList<String>();
-		ArrayList<String> schematicsForWorldGen = new ArrayList<String>();
-		//Getting all files within the the specified paths
-		String[] filesInWorldFolder = new File(worldPath).list();
-		String[] filesInBiomeFolder = new File(biomePath).list();
-        //Automagically generating the file paths for the world if it is new.
-		//Unfortunately it does not automagically populate the folders with schematics
-        genFolders(worldPath);
         //Looks in the plugins config file at chunkChance to determine if this chunk will even spawn anything
         if(chunkChance() == false) {
         	return;
         }
+//////////////////////////////Getting the world schematics///////////////////////////////////////////   
+        //Creating the file path to be looked into for schematic files to be generated in the world
+        String worldPath = "plugins/Easy_Structures/Schematics/" + "/" + world.getName();
+        //Creating arraylist to hold the schematic files from the world folder
+		ArrayList<String> schematicsForWorldGen = new ArrayList<String>();
+		//Getting all files within the worldPath
+		String[] filesInWorldFolder = new File(worldPath).list();
+        //Automagically generating the file paths for the world if it is new.
+		//Unfortunately it does not automagically populate the folders with schematics
+        genFolders(worldPath);  
         //Looks at the list of files in the worldPath and grabs all schematic files
-        schematicsForWorldGen = schematicsForWorldGen(filesInWorldFolder);
+        schematicsForWorldGen = schematicsForGen(filesInWorldFolder);
         //If there are NOT schematic files in the world folder of the world the chunks are being loaded in prints a message
         if(schematicsForWorldGen.size() == 0) {
         	WorldFeatures.log.info("Did not find any schematics in folder: " + world.getName() + "!");
             return;
         }
         //Checks the schematics config file to see what the chance is for this schematic to be spawned
-        ArrayList<String> chosenSchematics = schematicChance(schematicsForWorldGen, worldPath);
+        ArrayList<String> chosenWorldSchematics = schematicChance(schematicsForWorldGen, worldPath);
         //If there are no chosenSchemeNames it returns
-        if(chosenSchematics.isEmpty()) {
+        if(chosenWorldSchematics.isEmpty()) {
             return;
         }
         //Grabs a random schematic from chosenSchemeNames[] and puts it into schemeName
         //Not sure why they did it this way
         //Seems like they're misrepresenting the spawn rate. I might want to take this out?
-        String chosenSchematic = chosenSchematics.get(rand.nextInt(chosenSchematics.size()));
+        String chosenWorldSchematic = chosenWorldSchematics.get(rand.nextInt(chosenWorldSchematics.size()));
         //Grabbing the configuration file for the chosen schematic
-        String chosenConfig = chosenSchematic.substring(0, chosenSchematic.indexOf('.'));
-        BetterConfiguration schematicConfig = WorldFeatures.getConfig(new StringBuilder(worldPath).append("/").append(chosenConfig).toString());
+        String chosenWorldConfig = chosenWorldSchematic.substring(0, chosenWorldSchematic.indexOf('.'));
+        BetterConfiguration worldSchematicConfig = WorldFeatures.getConfig(new StringBuilder(worldPath).append("/").append(chosenWorldConfig).toString());
         //Checks configs for maxSpawns. If the schematic has reached its max spawns it exits this method
-        if(reachedMaxSpawns(schematicConfig) == true) {
+        if(reachedMaxSpawns(worldSchematicConfig) == true) {
         	return;
         }
         //Loading the schematic to the CuboidClipboard
-        cc = loadSchematic(worldPath, chosenSchematic);
+        cc = loadSchematic(worldPath, chosenWorldSchematic);
         //Getting the width, length, and height of the schematic that was just loaded into the clipboard
         width = cc.getWidth();
         length = cc.getLength();
         height = cc.getHeight();
         //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
-        randomRotate(schematicConfig, cc);
+        randomRotate(worldSchematicConfig, cc);
         //Checking config to see where place is set to and positions the schematic in that place
-        canSpawn = placeToSpawn(schematicConfig, maxHeight);
+        canSpawn = placeToSpawn(worldSchematicConfig, maxHeight);
         //If canSpawn is true, the schematic will paste
-        spawn(canSpawn, schematicConfig);
+        spawn(canSpawn, worldSchematicConfig);
+//////////////////////////////Getting the world schematics///////////////////////////////////////////
+//////////////////////////////Getting the biome schematics///////////////////////////////////////////
+        //Setting the path to look in the biome folder of the biome the block is currently in
+        String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, bHeight, randZ).getBiome().toString();
+		//Grabbing all files that are inside the biome folder
+        String[] filesInBiomeFolder = new File(biomePath).list();
+        //Instantiating an arraylist to hold the schematics that are inside the biome folder
+		ArrayList<String> schematicsForBiomeGen = new ArrayList<String>();
+        //Looks at the list of files in the biomePath and grabs all schematic files
+        schematicsForBiomeGen = schematicsForGen(filesInBiomeFolder);
+        //If there are NOT schematic files in the biome folder of the world the chunks are being loaded in prints a message
+        if(schematicsForBiomeGen.size() == 0) {
+        	WorldFeatures.log.info("Did not find any schematics in folder: " + loadBlockInChunk(randX, bHeight, randZ).getBiome().toString() + "!");
+            return;
+        }
+        //Checks the schematics config file to see what the chance is for this schematic to be spawned
+        ArrayList<String> chosenBiomeSchematics = schematicChance(schematicsForBiomeGen, biomePath);
+        //If there are no chosenSchemeNames it returns
+        if(chosenBiomeSchematics.isEmpty()) {
+            return;
+        }
+        //Grabs a random schematic from chosenSchemeNames[] and puts it into schemeName
+        //Not sure why they did it this way
+        //Seems like they're misrepresenting the spawn rate. I might want to take this out?
+        String chosenBiomeSchematic = chosenBiomeSchematics.get(rand.nextInt(chosenBiomeSchematics.size()));
+        //Grabbing the configuration file for the chosen schematic
+        String chosenBiomeConfig = chosenBiomeSchematic.substring(0, chosenBiomeSchematic.indexOf('.'));
+        BetterConfiguration biomeSchematicConfig = WorldFeatures.getConfig(new StringBuilder(biomePath).append("/").append(chosenBiomeConfig).toString());
+        //Checks configs for maxSpawns. If the schematic has reached its max spawns it exits this method
+        if(reachedMaxSpawns(biomeSchematicConfig) == true) {
+        	return;
+        }
+        //Loading the schematic to the CuboidClipboard
+        cc = loadSchematic(biomePath, chosenBiomeSchematic);
+        //Getting the width, length, and height of the schematic that was just loaded into the clipboard
+        width = cc.getWidth();
+        length = cc.getLength();
+        height = cc.getHeight();
+        //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
+        randomRotate(biomeSchematicConfig, cc);
+        //Checking config to see where place is set to and positions the schematic in that place
+        canSpawn = placeToSpawn(biomeSchematicConfig, maxHeight);
+        //If canSpawn is true, the schematic will paste
+        spawn(canSpawn, biomeSchematicConfig);
+//////////////////////////////Getting the biome schematics///////////////////////////////////////////
     }
     
     /**
@@ -276,7 +319,7 @@ public class ChunkListener implements Listener {
 	 * @param filesList The file list to be checked for schematic files.
 	 * @return The list of all schematic files within the specified file list
 	 */
-    public ArrayList<String> schematicsForWorldGen(String[] filesList) {
+    public ArrayList<String> schematicsForGen(String[] filesList) {
 		ArrayList<String> schematicsForWorldGen = new ArrayList<String>();
 	    if(filesList != null) {
 	    	if (plugin.getConfig().getBoolean("debug") == true)

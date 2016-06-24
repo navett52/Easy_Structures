@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane fx:id="title" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="360.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.91" xmlns:fx="http://javafx.com/fxml/1">
+   <center>
+      <VBox prefHeight="366.0" prefWidth="511.0" BorderPane.alignment="CENTER">
+         <children>
+            <TextField fx:id="fileName" prefHeight="3.0" prefWidth="600.0" promptText="Name of Schematic">
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Text: The name of the schematic you want to make the configuration file for." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="place" promptText="Place">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Text: Tells what area you want the schematic to spawn in. (Anywhere, Ground, Underground, Air)" />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="maxSpawns" promptText="Max Spawns">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Number: Maximum amount of times the schematic can spawn in this world." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="chanceToSpawn" prefHeight="25.0" prefWidth="153.0" promptText="Chance to Spawn">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Number: The chances this schematic has to spawn. Can be 0 - 100 (less chance - greater chance)." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="basementDepth" promptText="Basement Depth">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Number: A Y offset to spawn a portion of the schematic in the ground." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="minHeight" promptText="Minimum Height">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Number: Set a minimum height for your schematic to spawn at or above. Only used when 'place' is set to anywhere." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="masHeight" promptText="Maximum Height">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="Number: Set a maximum height for your schematic to spawn at or below. Only used when 'place' is set to anywhere." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="randomRotation" promptText="Random Rotation">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="True or False: Tell if you want your schematic to paste with a random rotation." />
+               </tooltip>
+            </TextField>
+            <TextField fx:id="pasteAir" promptText="Paste Air">
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+               <tooltip>
+                  <Tooltip text="True or False: Tell if you want to paste the air with your schematic." />
+               </tooltip>
+            </TextField>
+         </children>
+         <BorderPane.margin>
+            <Insets left="10.0" right="10.0" />
+         </BorderPane.margin>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+      </VBox>
+   </center>
+   <right>
+      <Button fx:id="create" alignment="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#OnClick" prefHeight="265.0" prefWidth="59.0" text="Create">
+         <BorderPane.margin>
+            <Insets right="10.0" />
+         </BorderPane.margin>
+      </Button>
+   </right>
+   <top>
+      <Text fx:id="title" strokeType="OUTSIDE" strokeWidth="0.0" text="Configuration Generator" wrappingWidth="580.13671875" BorderPane.alignment="CENTER">
+         <font>
+            <Font size="53.0" />
+         </font>
+         <BorderPane.margin>
+            <Insets bottom="5.0" />
+         </BorderPane.margin>
+      </Text>
+   </top>
+</BorderPane>

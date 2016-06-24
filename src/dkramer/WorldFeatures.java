@@ -35,7 +35,7 @@ public class WorldFeatures extends JavaPlugin {
     public static String defaultCuboidPicker = "SEEDS";
         
     public void onDisable() {
-        log.info("Easy_Structures Disabled");
+        log.info("Disabled");
     }
 
     public void onEnable() {
@@ -49,7 +49,7 @@ public class WorldFeatures extends JavaPlugin {
         //Confusing stuff to pass this to that to this and back
         c1 = new ChunkListener(this);
         p1 = new PlayerListener(this);
-        
+
         getServer().getPluginManager().registerEvents(new ChunkListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
@@ -61,11 +61,11 @@ public class WorldFeatures extends JavaPlugin {
     }
     
     private void saveAllConfigs() {
-    	System.out.println("[Easy_Structures] Saving Information...");
+    	//log.info("Saving Information...");
     	for(BetterConfiguration config : configs.values()) {
         	config.save();
         }
-    	System.out.println("[Easy_Structures] Done Saving!");
+    	//log.info("Done Saving!");
     }
     
     public static BetterConfiguration getConfig(String path) {
@@ -105,6 +105,7 @@ public class WorldFeatures extends JavaPlugin {
     	return error;
     }
     
+    //Nave
     public static List<World> getWorlds() {
     	return plugin.getServer().getWorlds();
     }
@@ -112,6 +113,7 @@ public class WorldFeatures extends JavaPlugin {
     /**
      * Get's a list of the worlds 
      * @return String[] holding the names of the worlds
+     * @author Evan Tellep
      */
 	public ArrayList<String> getWorldFolders() {
 		//Create the ArrayList to be returned later
@@ -120,7 +122,7 @@ public class WorldFeatures extends JavaPlugin {
 		File serverPath = new File(System.getProperty("user.dir"));
 		//Transferring the names of the files/directories in the current path to a String[]
 		String[] serverFiles = serverPath.list();
-		/**
+		/*
 		 * Cycles through all files/directories and if one is a directory looks inside for a level.dat
 		 * file since every world has one.
 		 */
@@ -149,6 +151,7 @@ public class WorldFeatures extends JavaPlugin {
 	 * @return 0 if every folder has been created
 	 * @return 1 if some folders have been created
 	 * @return 2
+	 * @author Evan Tellep
 	 */
 	public static void createFolders() {
 		//Creating a variable to count the number of biome folders to make sure all are getting created
@@ -159,67 +162,67 @@ public class WorldFeatures extends JavaPlugin {
 		//Using ArrayList<> so if MC updates and adds new biomes we don't have to worry about updating this.
 		ArrayList<Biome> biomes = new ArrayList<Biome>(Arrays.asList(Biome.values()));
 		//Creating an ArrayList<> to hold all the world names
-		ArrayList<String> worlds = new ArrayList<String>(plugin.getWorldFolders());
+		ArrayList<String> worlds = new ArrayList<String>(instance.getWorldFolders());
 	
 		//**********************DEBUGGING**********************\\
 		
 		    //List<World> worlds = new ArrayList<World>(getWorlds());
-		    //System.out.println(worlds.size());
+		    //log.info(worlds.size());
 		
 		    //ArrayList<WorldServer> worlds = new ArrayList<WorldServer>(MinecraftServer.getServer().worldServer);
-		    //System.out.println(worlds.size());
+		    //log.info(worlds.size());
 		    //ArrayList<MultiverseWorld> mvworlds = new ArrayList<MultiverseWorld>(worldmanager.getMVWorlds());
-		    //System.out.println(mvworlds.isEmpty());
+		    //log.info(mvworlds.isEmpty());
 		    //CraftServer server1 = new CraftServer(server, server.getPlayerList());
 		    //ArrayList<World> worlds2 = (ArrayList<World>) server1.getWorlds();
-		    //System.out.println(worlds2.size()); //prints 0
+		    //log.info(worlds2.size()); //prints 0
 			/*
 			for (World w1 : Bukkit.getWorlds()) {
-				System.out.println(w1.getName());//prints null
+				log.info(w1.getName());//prints null
 			}
 			
-			System.out.println(Bukkit.getName());//prints server name (CraftBukkit i think)
+			log.info(Bukkit.getName());//prints server name (CraftBukkit i think)
 			
-			System.out.println(Bukkit.getServer().getName());//prints server name (CraftBukkit i think)
+			log.info(Bukkit.getServer().getName());//prints server name (CraftBukkit i think)
 			
-			System.out.println(Bukkit.getWorld("world"));//prints null
+			log.info(Bukkit.getWorld("world"));//prints null
 			
 			for (World worlds1 : Bukkit.getWorlds()) {
-				System.out.println(worlds1.getName()); //prints nothing
+				log.info(worlds1.getName()); //prints nothing
 			}
 			
 			for (int i = 0; i < biomes.size(); i++) {
-				System.out.println(biomes.get(i));  //Successful: Prints all biome names; un-needed
+				log.info(biomes.get(i));  //Successful: Prints all biome names; un-needed
 			}
 			
 			for (int i = 0; i < worlds.size(); i++) {
-				System.out.println(worlds.get(i));//prints nothing
+				log.info(worlds.get(i));//prints nothing
 			}
 			
-			System.out.println(worlds.size());//prints 0
+			log.info(worlds.size());//prints 0
 			
 			log.info(Bukkit.getWorlds().toString());//gives [] 
 			
-			System.out.println(Bukkit.getWorlds().size());//prints 0
+			log.info(Bukkit.getWorlds().size());//prints 0
 			
-			System.out.println(Bukkit.getWorlds().size());//prints 0
+			log.info(Bukkit.getWorlds().size());//prints 0
 			
 			//Failed attempt at using Multiverse
 			MultiverseCore mvc = new MultiverseCore();
 			Collection<MultiverseWorld> mvw = new ArrayList<MultiverseWorld>();
 			mvw = mvc.getMVWorldManager().getMVWorlds();
-			System.out.println(mvw.size());
+			log.info(mvw.size());
 			MultiverseWorld[] mvwa = new MultiverseWorld[mvw.size()];
 			mvw.toArray(mvwa);
-			System.out.println(mvwa.length);
+			log.info(mvwa.length);
 			for (int i = 0; i < mvwa.length; i++) {
-				System.out.println(mvwa[i]);
+				log.info(mvwa[i]);
 			}
 			*/
 		//**********************DEBUGGING**********************\\
 		
 		
-		/**
+		/*
 		 * Creates the file structure locally so the Structure file will be in the same location as the server file.
 		 * When making the generator method we can seek the file paths locally.
 		 * Also cycles through the Biome[] and uses it to name all Biome folders

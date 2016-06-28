@@ -61,7 +61,7 @@
                   <Tooltip text="Number: Set a minimum height for your schematic to spawn at or above. Only used when 'place' is set to anywhere." />
                </tooltip>
             </TextField>
-            <TextField fx:id="masHeight" promptText="Maximum Height">
+            <TextField fx:id="maxHeight" promptText="Maximum Height">
                <VBox.margin>
                   <Insets top="5.0" />
                </VBox.margin>

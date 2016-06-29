@@ -1,5 +1,7 @@
 package dkramer;
 
+//He should have access to the jars!!!
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;

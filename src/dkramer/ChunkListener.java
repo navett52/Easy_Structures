@@ -25,8 +25,8 @@ public class ChunkListener implements Listener {
 	Random rand;
 	//The chunk being populated
     private Chunk chunk;
-    // base height? basement height? not sure yet..
-    private int bHeight;
+    //Height of the schematics base
+    private int baseHeight;
     //The world the chunk is being loaded in
     private World world;
     //The chunk's X coord
@@ -64,10 +64,10 @@ public class ChunkListener implements Listener {
         //Getting the random coords within the chunk
         randX = rand.nextInt(16);
         randZ = rand.nextInt(16);
-        //Setting the default that each schematic can spawn unless proven otherwise
-        boolean canSpawn = true;
         //Getting the maxHeight of the world
         int maxHeight = world.getMaxHeight() - 1;
+        //Creating a vector to set the offest of the schematic to 0 that way the schematic doesn't paste from where it was copied from like how it normally does
+        Vector offSet = new Vector(0, 0, 0);
         //Looks in the plugins config file at chunkChance to determine if this chunk will even spawn anything
         if(chunkChance() == false) {
         	return;
@@ -108,20 +108,25 @@ public class ChunkListener implements Listener {
         }
         //Loading the schematic to the CuboidClipboard
         cc = loadSchematic(worldPath, chosenWorldSchematic);
+        //Using the offSet Vector setting the schem's offest to 0
+        cc.setOffset(offSet);
         //Getting the width, length, and height of the schematic that was just loaded into the clipboard
         width = cc.getWidth();
+        System.out.println("Width of the schematic: " + width);
         length = cc.getLength();
+        System.out.println("Length of the schematic: " + length);
         height = cc.getHeight();
+        System.out.println("Height of the schematic: " + height);
         //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
         randomRotate(worldSchematicConfig, cc);
         //Checking config to see where place is set to and positions the schematic in that place
-        canSpawn = placeToSpawn(worldSchematicConfig, maxHeight);
+        boolean canSpawn = placeToSpawn(worldSchematicConfig, maxHeight);
         //If canSpawn is true, the schematic will paste
         spawn(canSpawn, worldSchematicConfig);
 //////////////////////////////Getting the world schematics///////////////////////////////////////////
 //////////////////////////////Getting the biome schematics///////////////////////////////////////////
         //Setting the path to look in the biome folder of the biome the block is currently in
-        String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, bHeight, randZ).getBiome().toString();
+        String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString();
 		//Grabbing all files that are inside the biome folder
         String[] filesInBiomeFolder = new File(biomePath).list();
         //Instantiating an arraylist to hold the schematics that are inside the biome folder
@@ -130,7 +135,7 @@ public class ChunkListener implements Listener {
         schematicsForBiomeGen = schematicsForGen(filesInBiomeFolder);
         //If there are NOT schematic files in the biome folder of the world the chunks are being loaded in prints a message
         if(schematicsForBiomeGen.size() == 0) {
-        	WorldFeatures.log.info("Did not find any schematics in folder: " + loadBlockInChunk(randX, bHeight, randZ).getBiome().toString() + "!");
+        	WorldFeatures.log.info("Did not find any schematics in folder: " + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString() + "!");
             return;
         }
         //Checks the schematics config file to see what the chance is for this schematic to be spawned
@@ -152,6 +157,8 @@ public class ChunkListener implements Listener {
         }
         //Loading the schematic to the CuboidClipboard
         cc = loadSchematic(biomePath, chosenBiomeSchematic);
+        //Setting the offSet for the Biome schem to 0
+        cc.setOffset(offSet);
         //Getting the width, length, and height of the schematic that was just loaded into the clipboard
         width = cc.getWidth();
         length = cc.getLength();
@@ -212,39 +219,51 @@ public class ChunkListener implements Listener {
     }
     
     /**
-     * Checks if one or more corner blocks is of a certain material.
+     * Checks if one or more corner blocks of the bottom most section of the cuboid clipboard is of a certain material.
      * @param material The material you want to check for (Basically the different types of blocks in MC).
      * @return True if one or more of the blocks are the specified material, false otherwise.
      */
-    public boolean cornerBlocksOr(Material material) {
-        return loadBlockInChunk(randX, bHeight, randZ).getType() == material 
-        	|| loadBlockInChunk(randX + width, bHeight, randZ).getType() == material 
-        	|| loadBlockInChunk(randX, bHeight, randZ + length).getType() == material 
-        	|| loadBlockInChunk(randX + width, bHeight, randZ + length).getType() == material;
+    public boolean bottomCornerBlocksOr(Material material) {
+        return loadBlockInChunk(randX - (width / 2), baseHeight, randZ - (length / 2)).getType() == material 
+        	|| loadBlockInChunk(randX - (width / 2), baseHeight, randZ + (length / 2)).getType() == material 
+        	|| loadBlockInChunk(randX + (width / 2), baseHeight, randZ - (length / 2)).getType() == material 
+        	|| loadBlockInChunk(randX + (width / 2), baseHeight, randZ + (length / 2)).getType() == material;
     }
     
-    /*//Nave
-    //Should allow us to check if at least one of the corner blocks is in a biome
-    //Should allow for nice transition structures
-    public Biome[] cornerBlocksBiomes() {
-    	Biome[] biomes = new Biome[4];
-        biomes[0] = loadBlockChunk(randX, bHeight, randZ).getBiome();
-        biomes[1] = loadBlockChunk(randX + width, bHeight, randZ).getBiome(); 
-        biomes[2] = loadBlockChunk(randX, bHeight, randZ + length).getBiome(); 
-        biomes[3] = loadBlockChunk(randX + width, bHeight, randZ + length).getBiome();
-		return biomes;
-    }*/ //Might not need this method
+    /**
+     * Checks if one or more corner blocks of the top most section of the cuboid clipboard is of a certain material.
+     * @param material The material you want to check for (Basically the different types of blocks in MC).
+     * @return True if one or more of the blocks are the specified material, false otherwise.
+     */
+    public boolean topCornerBlocksOr(Material material) {
+        return loadBlockInChunk(randX - (width / 2), baseHeight + height - 1, randZ - (length / 2)).getType() == material 
+        	|| loadBlockInChunk(randX - (width / 2), baseHeight + height - 1, randZ + (length / 2)).getType() == material 
+        	|| loadBlockInChunk(randX + (width / 2), baseHeight + height - 1, randZ - (length / 2)).getType() == material 
+        	|| loadBlockInChunk(randX + (width / 2), baseHeight + height - 1, randZ + (length / 2)).getType() == material;
+    }
     
     /**
-     * Checks to see if all corner blocks are a specific material.
+     * Checks to see if all corner blocks of the bottom most section of the cuboid clipboard is of a specific material.
      * @param material The material you want to check for.
-     * @return True if all the corner blocks are the specified material, false otherwise.
+     * @return True if all of the corner blocks are the specified material, false otherwise.
      */
-    public boolean cornerBlocksAnd(Material material) {
-        return loadBlockInChunk(randX, bHeight, randZ).getType() == material
-        	&& loadBlockInChunk(randX + width, bHeight, randZ).getType() == material
-        	&& loadBlockInChunk(randX, bHeight, randZ + length).getType() == material 
-        	&& loadBlockInChunk(randX + width, bHeight, randZ + length).getType() == material;
+    public boolean bottomCornerBlocksAnd(Material material) {
+        return loadBlockInChunk(randX - (width / 2), baseHeight, randZ - (length / 2)).getType() == material 
+        	&& loadBlockInChunk(randX - (width / 2), baseHeight, randZ + (length / 2)).getType() == material 
+        	&& loadBlockInChunk(randX + (width / 2), baseHeight, randZ - (length / 2)).getType() == material 
+        	&& loadBlockInChunk(randX + (width / 2), baseHeight, randZ + (length / 2)).getType() == material;
+    }
+    
+    /**
+     * Checks if all corner blocks of the top most section of the cuboid clipboard is of a certain material.
+     * @param material The material you want to check for.
+     * @return True if all of the corner blocks are the specified material, false otherwise.
+     */
+    public boolean topCornerBlocksAnd(Material material) {
+        return loadBlockInChunk(randX - (width / 2), baseHeight + height - 1, randZ - (length / 2)).getType() == material 
+        	&& loadBlockInChunk(randX - (width / 2), baseHeight + height - 1, randZ + (length / 2)).getType() == material 
+        	&& loadBlockInChunk(randX + (width / 2), baseHeight + height - 1, randZ - (length / 2)).getType() == material 
+        	&& loadBlockInChunk(randX + (width / 2), baseHeight + height - 1, randZ + (length / 2)).getType() == material;
     }
     
     /**
@@ -253,10 +272,10 @@ public class ChunkListener implements Listener {
      * @return True if all the corner blocks are of the specified biome, false otherwise.
      */
     public boolean cornerBlocksBiomeAnd(Biome biome) {
-        return loadBlockInChunk(randX, bHeight, randZ).getBiome().toString().equals(biome) 
-        	&& loadBlockInChunk(randX + width, bHeight, randZ).getBiome().toString().equals(biome) 
-        	&& loadBlockInChunk(randX, bHeight, randZ + length).getBiome().toString().equals(biome) 
-        	&& loadBlockInChunk(randX + width, bHeight, randZ + length).getBiome().toString().equals(biome);
+        return loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString().equals(biome) 
+        	&& loadBlockInChunk(randX + width, baseHeight, randZ).getBiome().toString().equals(biome) 
+        	&& loadBlockInChunk(randX, baseHeight, randZ + length).getBiome().toString().equals(biome) 
+        	&& loadBlockInChunk(randX + width, baseHeight, randZ + length).getBiome().toString().equals(biome);
     }
     
     /**
@@ -265,10 +284,10 @@ public class ChunkListener implements Listener {
      * @return True if one or more blocks is of the specified biome, false otherwise
      */
     public boolean cornerBlocksBiomeOr(Biome biome) {
-        return loadBlockInChunk(randX, bHeight, randZ).getBiome().toString().equals(biome) 
-        	|| loadBlockInChunk(randX + width, bHeight, randZ).getBiome().toString().equals(biome) 
-        	|| loadBlockInChunk(randX, bHeight, randZ + length).getBiome().toString().equals(biome) 
-        	|| loadBlockInChunk(randX + width, bHeight, randZ + length).getBiome().toString().equals(biome);
+        return loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString().equals(biome) 
+        	|| loadBlockInChunk(randX + width, baseHeight, randZ).getBiome().toString().equals(biome) 
+        	|| loadBlockInChunk(randX, baseHeight, randZ + length).getBiome().toString().equals(biome) 
+        	|| loadBlockInChunk(randX + width, baseHeight, randZ + length).getBiome().toString().equals(biome);
     }
     
     /**
@@ -421,50 +440,45 @@ public class ChunkListener implements Listener {
     public boolean placeToSpawn(BetterConfiguration config, int maxHeight) {
     	boolean canSpawn = true;
 	    String place = config.getString("place", "ground");
+	    
 	    if(place.equals("anywhere")) {
 	        int minY = config.getInt("anywhereminY", 1);
 	        int maxY = config.getInt("anywheremaxY", maxHeight);
-	        bHeight = rand.nextInt(maxY - minY) + 1 + minY;
-	        if(bHeight > maxHeight - height) {
+	        baseHeight = rand.nextInt(maxY - minY) + 1 + minY;
+	        if(baseHeight + height - 1 > maxHeight) {
 	            canSpawn = false;
 	        }
-	    } else if(place.equals("ground")) { //need to edit this. Since it checks for leaves as well sometimes pushes a schematic too low
-	        bHeight = maxHeight;
-	        int base = config.getInt("basementdepth", 0);
-	        while(cornerBlocksOr(Material.AIR))  {
-	            bHeight--;
+	        
+	    } else if(place.equals("ground")) {
+	        baseHeight = maxHeight;
+	        int basement = config.getInt("basementdepth", 0);
+	        while(bottomCornerBlocksOr(Material.AIR) || bottomCornerBlocksOr(Material.LEAVES) || bottomCornerBlocksOr(Material.LEAVES_2)
+	        		|| bottomCornerBlocksOr(Material.LOG) || bottomCornerBlocksOr(Material.LOG_2) || bottomCornerBlocksOr(Material.SNOW) 
+	        		|| bottomCornerBlocksOr(Material.LONG_GRASS) || bottomCornerBlocksOr(Material.PACKED_ICE))  {
+	            baseHeight--;
 	        }
-	        while(cornerBlocksOr(Material.LEAVES))  {
-	            bHeight--;
-	        }
-	        while(cornerBlocksOr(Material.SNOW))  {
-	            bHeight--;
-	        }
-	        if(bHeight > (maxHeight - height) + base) {
+	        if(bottomCornerBlocksOr(Material.STATIONARY_WATER) || bottomCornerBlocksOr(Material.ICE) || bottomCornerBlocksOr(Material.PACKED_ICE) 
+	        		|| baseHeight + height > maxHeight) {
 	            canSpawn = false;
 	        }
-	        if(cornerBlocksOr(Material.STATIONARY_WATER)) {
-	            canSpawn = false;
+	        for(int i = 0; i < basement; i++) {
+	        	baseHeight--;
 	        }
+	        
 	    } else if(place.equals("air")) {
-	        for(bHeight = maxHeight; cornerBlocksOr(Material.AIR); bHeight--) { }
-	        for(bHeight = rand.nextInt(maxHeight - bHeight) + 1 + bHeight; bHeight > maxHeight - height; bHeight--) { }
-	        canSpawn = false;
-	        if(cornerBlocksAnd(Material.AIR)) {
-	            canSpawn = true;
+	        for(baseHeight = maxHeight; bottomCornerBlocksOr(Material.AIR); baseHeight--){}
+	        baseHeight++;
+	        baseHeight = rand.nextInt(maxHeight - baseHeight) + baseHeight;
+	        if(!bottomCornerBlocksAnd(Material.AIR) || !topCornerBlocksAnd(Material.AIR) || baseHeight + height - 1 > maxHeight) {
+	            canSpawn = false;
 	        }
+	        
 	    } else if(place.equals("underground")) {
-	        for(bHeight = 1; loadBlockInChunk(randX, bHeight + 1 + height, randZ).getType() != Material.AIR; bHeight++) { }
-	        for(; loadBlockInChunk(randX + width, bHeight + 1 + height, randZ).getType() != Material.AIR; bHeight++) { }
-	        for(; loadBlockInChunk(randX, bHeight + 1 + height, randZ + length).getType() != Material.AIR; bHeight++) { }
-	        for(; loadBlockInChunk(randX + width, bHeight + 1 + height, randZ + length).getType() != Material.AIR; bHeight++) { }
-	        for(bHeight = rand.nextInt(bHeight) + 1; bHeight > maxHeight - height; bHeight--) { }
-	        canSpawn = false;
-	        if(loadBlockInChunk(randX, bHeight + 1 + height, randZ).getType() != Material.AIR 
-	        		&& loadBlockInChunk(randX + width, bHeight + 1 + height, randZ).getType() != Material.AIR  
-	        		&& loadBlockInChunk(randX, bHeight + 1 + height, randZ + length).getType() != Material.AIR  
-	        		&& loadBlockInChunk(randX + width, bHeight + 1 + height, randZ + length).getType() != Material.AIR ) {
-	            canSpawn = true;
+	        for(baseHeight = 1; !topCornerBlocksOr(Material.AIR); baseHeight++){}
+	        baseHeight--;
+	        baseHeight = rand.nextInt(baseHeight);
+	        if(topCornerBlocksOr(Material.AIR) || baseHeight + height - 1 > maxHeight) {
+	            canSpawn = false;
 	        }
 	    }
 		return canSpawn;
@@ -488,7 +502,7 @@ public class ChunkListener implements Listener {
 	    		pasteNone[i] = Integer.parseInt(s);
 	    		i++;
 	    	}
-	        loadArea(world, new Vector(chunkX + randX, (bHeight + 1) - schematicConfig.getInt("basementdepth", 0), chunkZ + randZ), pasteNone);
+	        loadArea(world, new Vector(chunkX + randX, (baseHeight + 1) - schematicConfig.getInt("basementdepth", 0), chunkZ + randZ), pasteNone);
 	        schematicConfig.set((new StringBuilder("spawns.")).append(world.getName()).toString(), schematicConfig.getInt((new StringBuilder("spawns.")).append(world.getName()).toString(), 0) + 1);
 	        return;
 	    }

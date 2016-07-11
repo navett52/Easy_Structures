@@ -506,5 +506,22 @@ public class ChunkListener implements Listener {
 	        schematicConfig.set((new StringBuilder("spawns.")).append(world.getName()).toString(), schematicConfig.getInt((new StringBuilder("spawns.")).append(world.getName()).toString(), 0) + 1);
 	        return;
 	    }
+    }	
+    /**
+     * Turns the default leaves and wood into air
+     * @author Jake Reilman
+     * @param y coordinate
+     */
+    public void NoDefaultTrees(Vector y){
+    	while (y.equals("air")){
+    		baseHeight--;
+    		}
+    	if (y.equals("leaf") || y.equals("wood")){
+    		while(y.equals("leaf") || y.equals("wood")){
+    			((Block) y).setTypeId(0);
+    			--baseHeight;
+    		}
+    	}    	
     }
 }
+

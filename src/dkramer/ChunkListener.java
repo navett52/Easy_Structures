@@ -1,6 +1,9 @@
 package dkramer;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -20,7 +23,7 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
 
-public class ChunkListener implements Listener {
+public class ChunkListener implements Listener{
 	//A random number generator
 	Random rand;
 	//The chunk being populated
@@ -46,9 +49,11 @@ public class ChunkListener implements Listener {
     //How many degrees the schematic will rotate if randomRotation = true
     private int rotation;
     //A reference point to worldFeatures class
-    public static WorldFeatures plugin;
+    public static WorldFeatures plugin = WorldFeatures.instance;
     //Declaring a world edit cuboid clipboard to be used 
     CuboidClipboard cc;
+    
+    
     
     /**
      * The method where all the magic happens.
@@ -56,7 +61,7 @@ public class ChunkListener implements Listener {
      */
 	@EventHandler
     public void onChunkPopulate(ChunkPopulateEvent event) {
-    	//Getting the chunk that is triggering the event
+		//Getting the chunk that is triggering the event
     	chunk = event.getChunk();
         chunkX = chunk.getX() * 16;
         chunkZ = chunk.getZ() * 16;
@@ -68,11 +73,7 @@ public class ChunkListener implements Listener {
         int maxHeight = world.getMaxHeight() - 1;
         //Creating a vector to set the offest of the schematic to 0 that way the schematic doesn't paste from where it was copied from like how it normally does
         Vector offSet = new Vector(0, 0, 0);
-        //Looks in the plugins config file at chunkChance to determine if this chunk will even spawn anything
-        if(chunkChance() == false) {
-        	return;
-        }
-//////////////////////////////Getting the world schematics///////////////////////////////////////////   
+//////////////////////////////Getting the world schematics/////////////////////////////////////////// 
         //Creating the file path to be looked into for schematic files to be generated in the world
         String worldPath = "plugins/Easy_Structures/Schematics/" + "/" + world.getName();
         //Creating arraylist to hold the schematic files from the world folder
@@ -86,8 +87,19 @@ public class ChunkListener implements Listener {
         schematicsForWorldGen = schematicsForGen(filesInWorldFolder);
         //If there are NOT schematic files in the world folder of the world the chunks are being loaded in prints a message
         if(schematicsForWorldGen.size() == 0) {
-        	WorldFeatures.log.info("Did not find any schematics in folder: " + world.getName() + "!");
+        	if (plugin.getConfig().getBoolean("debug") == true) {
+        		WorldFeatures.log.info("Did not find any schematics in folder: " + world.getName() + " for chunk " + chunk.getX() +  + chunk.getZ() + "!");
+        	}
+    		File chunkFile = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + world.getName() + "/" + "chunk_" + chunk.getX() + "," + chunk.getZ() + ".yml");
+    		if(!chunkFile.exists()) {
+    			createChunkFile("false");
+    		}
             return;
+        }
+        createChunkFile("true");
+        //Looks in the plugins config file at chunkChance to determine if this chunk will even spawn anything
+        if(chunkChance() == false) {
+        	return;
         }
         //Checks the schematics config file to see what the chance is for this schematic to be spawned
         ArrayList<String> chosenWorldSchematics = schematicChance(schematicsForWorldGen, worldPath);
@@ -95,10 +107,16 @@ public class ChunkListener implements Listener {
         if(chosenWorldSchematics.isEmpty()) {
             return;
         }
+        String chosenWorldSchematic = null;
         //Grabs a random schematic from chosenSchemeNames[] and puts it into schemeName
         //Not sure why they did it this way
         //Seems like they're misrepresenting the spawn rate. I might want to take this out?
-        String chosenWorldSchematic = chosenWorldSchematics.get(rand.nextInt(chosenWorldSchematics.size()));
+        if (chosenWorldSchematics.size() > 1) {
+	        chosenWorldSchematic = chosenWorldSchematics.get(rand.nextInt(chosenWorldSchematics.size()));
+	        System.out.println(chosenWorldSchematics.size());
+        } else {
+        	chosenWorldSchematic = chosenWorldSchematics.get(0);
+        }
         //Grabbing the configuration file for the chosen schematic
         String chosenWorldConfig = chosenWorldSchematic.substring(0, chosenWorldSchematic.indexOf('.'));
         BetterConfiguration worldSchematicConfig = WorldFeatures.getConfig(new StringBuilder(worldPath).append("/").append(chosenWorldConfig).toString());
@@ -108,23 +126,28 @@ public class ChunkListener implements Listener {
         }
         //Loading the schematic to the CuboidClipboard
         cc = loadSchematic(worldPath, chosenWorldSchematic);
-        //Using the offSet Vector setting the schem's offest to 0
-        cc.setOffset(offSet);
         //Getting the width, length, and height of the schematic that was just loaded into the clipboard
         width = cc.getWidth();
-        System.out.println("Width of the schematic: " + width);
+        //If width and length are even then setting the origin to 0,0 doesn't allow my corner block calculations to work.
+        //This is a quick fix. If I could figure out which of the 4 center blocks it chooses as it's 0,0 point I could adjust the math
+        if (width % 2 == 0) {
+        	width++;
+        }
         length = cc.getLength();
-        System.out.println("Length of the schematic: " + length);
+        if (length % 2 == 0) {
+        	length++;
+        }
         height = cc.getHeight();
-        System.out.println("Height of the schematic: " + height);
+        //Using the offSet Vector setting the schem's offest to 0
+        cc.setOffset(offSet);
         //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
         randomRotate(worldSchematicConfig, cc);
         //Checking config to see where place is set to and positions the schematic in that place
         boolean canSpawn = placeToSpawn(worldSchematicConfig, maxHeight);
         //If canSpawn is true, the schematic will paste
         spawn(canSpawn, worldSchematicConfig);
-//////////////////////////////Getting the world schematics///////////////////////////////////////////
-//////////////////////////////Getting the biome schematics///////////////////////////////////////////
+//////////////////////////////End of the world's schematics////////////////////////////////////////////
+//////////////////////////////Getting the biome schematics/////////////////////////////////////////////
         //Setting the path to look in the biome folder of the biome the block is currently in
         String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString();
 		//Grabbing all files that are inside the biome folder
@@ -135,8 +158,10 @@ public class ChunkListener implements Listener {
         schematicsForBiomeGen = schematicsForGen(filesInBiomeFolder);
         //If there are NOT schematic files in the biome folder of the world the chunks are being loaded in prints a message
         if(schematicsForBiomeGen.size() == 0) {
-        	WorldFeatures.log.info("Did not find any schematics in folder: " + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString() + "!");
-            return;
+        	if (plugin.getConfig().getBoolean("debug") == true) {
+        		WorldFeatures.log.info("Did not find any schematics in folder: " + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString() + "!");
+        	}
+        	return;
         }
         //Checks the schematics config file to see what the chance is for this schematic to be spawned
         ArrayList<String> chosenBiomeSchematics = schematicChance(schematicsForBiomeGen, biomePath);
@@ -157,24 +182,30 @@ public class ChunkListener implements Listener {
         }
         //Loading the schematic to the CuboidClipboard
         cc = loadSchematic(biomePath, chosenBiomeSchematic);
-        //Setting the offSet for the Biome schem to 0
-        cc.setOffset(offSet);
         //Getting the width, length, and height of the schematic that was just loaded into the clipboard
         width = cc.getWidth();
+        if (width % 2 == 0) {
+        	width++;
+        }
         length = cc.getLength();
+        if (length % 2 == 0) {
+        	length++;
+        }
         height = cc.getHeight();
+        //Setting the offSet for the Biome schem to 0
+        cc.setOffset(offSet);
         //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
         randomRotate(biomeSchematicConfig, cc);
         //Checking config to see where place is set to and positions the schematic in that place
         canSpawn = placeToSpawn(biomeSchematicConfig, maxHeight);
         //If canSpawn is true, the schematic will paste
         spawn(canSpawn, biomeSchematicConfig);
-//////////////////////////////Getting the biome schematics///////////////////////////////////////////
+//////////////////////////////End of the biome schematics///////////////////////////////////////////
     }
     
     /**
-     * Allowing WorldFeatures calss to be aware of this particular instance of chunkListener.
-     * @param main
+     * Allowing WorldFeatures class to be aware of this particular instance of chunkListener.
+     * @param main An instance of the WorldFeatures class
      */
     public ChunkListener(WorldFeatures main) { 
     	ChunkListener.plugin = main;
@@ -222,6 +253,7 @@ public class ChunkListener implements Listener {
      * Checks if one or more corner blocks of the bottom most section of the cuboid clipboard is of a certain material.
      * @param material The material you want to check for (Basically the different types of blocks in MC).
      * @return True if one or more of the blocks are the specified material, false otherwise.
+     * @author Evan Tellep
      */
     public boolean bottomCornerBlocksOr(Material material) {
         return loadBlockInChunk(randX - (width / 2), baseHeight, randZ - (length / 2)).getType() == material 
@@ -234,6 +266,7 @@ public class ChunkListener implements Listener {
      * Checks if one or more corner blocks of the top most section of the cuboid clipboard is of a certain material.
      * @param material The material you want to check for (Basically the different types of blocks in MC).
      * @return True if one or more of the blocks are the specified material, false otherwise.
+     * @author Evan Tellep
      */
     public boolean topCornerBlocksOr(Material material) {
         return loadBlockInChunk(randX - (width / 2), baseHeight + height - 1, randZ - (length / 2)).getType() == material 
@@ -246,6 +279,7 @@ public class ChunkListener implements Listener {
      * Checks to see if all corner blocks of the bottom most section of the cuboid clipboard is of a specific material.
      * @param material The material you want to check for.
      * @return True if all of the corner blocks are the specified material, false otherwise.
+     * @author Evan Tellep
      */
     public boolean bottomCornerBlocksAnd(Material material) {
         return loadBlockInChunk(randX - (width / 2), baseHeight, randZ - (length / 2)).getType() == material 
@@ -258,6 +292,7 @@ public class ChunkListener implements Listener {
      * Checks if all corner blocks of the top most section of the cuboid clipboard is of a certain material.
      * @param material The material you want to check for.
      * @return True if all of the corner blocks are the specified material, false otherwise.
+     * @author Evan Tellep
      */
     public boolean topCornerBlocksAnd(Material material) {
         return loadBlockInChunk(randX - (width / 2), baseHeight + height - 1, randZ - (length / 2)).getType() == material 
@@ -282,6 +317,7 @@ public class ChunkListener implements Listener {
      * Checks to see if one or more of the corner blocks is of a specific biome.
      * @param biome The biome you want to check for.
      * @return True if one or more blocks is of the specified biome, false otherwise
+     * @author Evan Tellep
      */
     public boolean cornerBlocksBiomeOr(Biome biome) {
         return loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString().equals(biome) 
@@ -295,10 +331,10 @@ public class ChunkListener implements Listener {
      * @return True if chunkChance from the plugin config is greater than a random number between 0-100, false otherwise.
      */
     public boolean chunkChance() {
-        if(rand.nextInt(100) + 1 > plugin.getConfig().getInt("chunkchance")) {
+        if(rand.nextInt(100) + 1 > plugin.getConfig().getInt("chunkchance", 100)) {
         	if (plugin.getConfig().getBoolean("debug") == true)
         	{
-        		WorldFeatures.log.info("Not going to load schematics in newly created chunk");
+        		WorldFeatures.log.info("Chunk Chance: Not going to load schematics in newly created chunk");
         	}
             return false;
         }
@@ -306,25 +342,13 @@ public class ChunkListener implements Listener {
     }
     
     /**
-     * Checks to see the biome of a specified block within the chunk
-     * @param x the X coord of the block within the chunk
-     * @param y the height of the block
-     * @param z the Z coord of the block within the chunk
-     * @return The name of the biome the block is in
-     */
-    public String biomeOfBlock(int x, int y, int z) {
-		String biomeOfRandBlock = loadBlockInChunk(x, y, z).getBiome().toString();
-		return biomeOfRandBlock;
-    }
-    
-    /**
-     * Creates the folders for the world that this event is being triggered in if they have not yet been made.
+     * Creates the folders for the world that this event is being triggered in, but only if they have not yet been made.
      * @param path The path to be created
+     * @author Evan Tellep
      */
     public void genFolders(String path) {
-	    File worldPath = new File(path);
-	    if (!worldPath.exists()) {
-	    	worldPath.mkdirs();
+	    if (!new File(path).exists()) {
+	    	new File(path).mkdirs();
 	    	Biome[] biomes = Biome.values();
 	    	for (int i = 0; i < biomes.length; i++) {
 	    		File biomeFldrs = new File("plugins/Easy_Structures/Schematics/" + "/" + world.getName() + "/" + biomes[i]);
@@ -466,22 +490,76 @@ public class ChunkListener implements Listener {
 	        }
 	        
 	    } else if(place.equals("air")) {
-	        for(baseHeight = maxHeight; bottomCornerBlocksOr(Material.AIR); baseHeight--){}
-	        baseHeight++;
+	        baseHeight = maxHeight;
+	        while (loadBlockInChunk(randX, baseHeight, randZ).getType() == Material.AIR) {
+	        	baseHeight--;
+	        }
 	        baseHeight = rand.nextInt(maxHeight - baseHeight) + baseHeight;
 	        if(!bottomCornerBlocksAnd(Material.AIR) || !topCornerBlocksAnd(Material.AIR) || baseHeight + height - 1 > maxHeight) {
 	            canSpawn = false;
 	        }
 	        
 	    } else if(place.equals("underground")) {
-	        for(baseHeight = 1; !topCornerBlocksOr(Material.AIR); baseHeight++){}
+	    	while(loadBlockInChunk(randX, baseHeight + height, randZ).getType() != Material.AIR) {
+	    		baseHeight++;
+	    	}
 	        baseHeight--;
 	        baseHeight = rand.nextInt(baseHeight);
-	        if(topCornerBlocksOr(Material.AIR) || baseHeight + height - 1 > maxHeight) {
+	        if(topCornerBlocksOr(Material.AIR)) {
+	        	while(topCornerBlocksOr(Material.AIR)) {
+	        		baseHeight--;
+	        	}
+	        	baseHeight--;
+	        }
+	        if(baseHeight + height - 1 > maxHeight) {
 	            canSpawn = false;
 	        }
 	    }
 		return canSpawn;
+    }
+    
+    /**
+     * Create a file for the chunk to determine whether this plugin has or has not tried to populate the chunk
+     * @param value True/False Whether or not the plugin has tried to populate the chunk
+     */
+    public void createChunkFile(String value) {
+		//creates a null buffered writer object
+		BufferedWriter writer = null;
+		//tries to create and write a new YML file
+		try
+		{
+			//adds the ".yml" extension to the file name
+			String fileName = "chunk_" + chunk.getX() + "," + chunk.getZ() + ".yml";
+    		File chunkFileLocation = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + world.getName());
+    		chunkFileLocation.mkdirs();
+			//Creates a new file object with the file name
+			File file = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + world.getName() + "/" + fileName);
+			//creates a blank file from the file object with the given file name
+			file.createNewFile();
+			//finds the exact path of the created file object to ensure writing to it is successful 
+			String filePath = file.getCanonicalPath();
+			//Instantiate the buffered writer object wrapped around a file writer object
+			writer = new BufferedWriter(new FileWriter(filePath));
+			//Writes individual attributes to the file with a line break at the end of each attribute IF they actually entered said attributes
+			writer.write("populated: " + value);
+		}
+		catch (IOException e)
+		{
+			System.err.println(e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+		finally
+		{
+			try 
+			{
+				writer.close();
+			}
+			catch (IOException e) 
+			{
+				System.err.println(e.getLocalizedMessage());
+				e.printStackTrace();
+			}
+		}
     }
     
     /**
@@ -493,7 +571,7 @@ public class ChunkListener implements Listener {
 	    if(canSpawn) {
 	    	if (plugin.getConfig().getBoolean("showspawnedlocation") == true)
 	    	{
-	    		WorldFeatures.log.info("Spawning schematic at chunk (x,z)" + chunkX + "," + chunkZ );	
+	    		WorldFeatures.log.info("Spawning schematic at chunk (x,z)" + chunk.getX() + "," + chunk.getZ());
 	    	}
 	    	String[] stringNone = schematicConfig.getString("dontpaste", "0").replaceAll(" ", "").split(",");
 	    	int[] pasteNone = new int[stringNone.length];

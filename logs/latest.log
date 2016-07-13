@@ -1,0 +1,53 @@
+[11:33:58] [Server thread/INFO]: Starting minecraft server version 1.10
+[11:33:58] [Server thread/WARN]: To start the server with more ram, launch it as "java -Xmx1024M -Xms1024M -jar minecraft_server.jar"
+[11:33:58] [Server thread/INFO]: Loading properties
+[11:33:58] [Server thread/INFO]: Default game type: SURVIVAL
+[11:33:58] [Server thread/INFO]: Generating keypair
+[11:33:58] [Server thread/INFO]: Starting Minecraft server on *:25565
+[11:33:58] [Server thread/INFO]: Using default channel type
+[11:33:59] [Server thread/INFO]: This server is running CraftBukkit version git-Bukkit-10c10b3 (MC: 1.10) (Implementing API version 1.10-R0.1-SNAPSHOT)
+[11:33:59] [Server thread/ERROR]: Could not load 'plugins\Repopulate_Populated_Chunks.jar' in folder 'plugins'
+org.bukkit.plugin.InvalidPluginException: java.lang.IllegalStateException: JavaPlugin requires org.bukkit.plugin.java.PluginClassLoader
+	at org.bukkit.plugin.java.JavaPluginLoader.loadPlugin(JavaPluginLoader.java:133) ~[craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at org.bukkit.plugin.SimplePluginManager.loadPlugin(SimplePluginManager.java:328) ~[craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at org.bukkit.plugin.SimplePluginManager.loadPlugins(SimplePluginManager.java:251) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at org.bukkit.craftbukkit.v1_10_R1.CraftServer.loadPlugins(CraftServer.java:294) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at org.bukkit.craftbukkit.v1_10_R1.CraftServer.<init>(CraftServer.java:256) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at net.minecraft.server.v1_10_R1.PlayerList.<init>(PlayerList.java:70) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at net.minecraft.server.v1_10_R1.DedicatedPlayerList.<init>(SourceFile:14) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at net.minecraft.server.v1_10_R1.DedicatedServer.init(DedicatedServer.java:183) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at net.minecraft.server.v1_10_R1.MinecraftServer.run(MinecraftServer.java:517) [craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at java.lang.Thread.run(Unknown Source) [?:1.8.0_91]
+Caused by: java.lang.IllegalStateException: JavaPlugin requires org.bukkit.plugin.java.PluginClassLoader
+	at org.bukkit.plugin.java.JavaPlugin.<init>(JavaPlugin.java:65) ~[craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at dkramer.WorldFeatures.<init>(WorldFeatures.java:24) ~[classes/:?]
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method) ~[?:1.8.0_91]
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source) ~[?:1.8.0_91]
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source) ~[?:1.8.0_91]
+	at java.lang.reflect.Constructor.newInstance(Unknown Source) ~[?:1.8.0_91]
+	at java.lang.Class.newInstance(Unknown Source) ~[?:1.8.0_91]
+	at org.bukkit.plugin.java.PluginClassLoader.<init>(PluginClassLoader.java:52) ~[craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	at org.bukkit.plugin.java.JavaPluginLoader.loadPlugin(JavaPluginLoader.java:129) ~[craftbukkit-1.10-R0.1-SNAPSHOT-latest.jar:git-Bukkit-10c10b3]
+	... 9 more
+[11:33:59] [Server thread/INFO]: Preparing level "world"
+[11:34:00] [Server thread/INFO]: Preparing start region for level 0 (Seed: 5341858161430061242)
+[11:34:01] [Server thread/INFO]: Preparing spawn area: 9%
+[11:34:02] [Server thread/INFO]: Preparing spawn area: 16%
+[11:34:03] [Server thread/INFO]: Preparing spawn area: 25%
+[11:34:04] [Server thread/INFO]: Preparing spawn area: 46%
+[11:34:05] [Server thread/INFO]: Preparing spawn area: 56%
+[11:34:06] [Server thread/INFO]: Preparing spawn area: 63%
+[11:34:07] [Server thread/INFO]: Preparing spawn area: 69%
+[11:34:08] [Server thread/INFO]: Preparing spawn area: 75%
+[11:34:09] [Server thread/INFO]: Preparing spawn area: 82%
+[11:34:10] [Server thread/INFO]: Preparing spawn area: 89%
+[11:34:11] [Server thread/INFO]: Preparing spawn area: 94%
+[11:34:12] [Server thread/INFO]: Preparing start region for level 1 (Seed: 5341858161430061242)
+[11:34:13] [Server thread/INFO]: Preparing spawn area: 28%
+[11:34:14] [Server thread/INFO]: Preparing spawn area: 58%
+[11:34:15] [Server thread/INFO]: Preparing spawn area: 83%
+[11:34:16] [Server thread/INFO]: Preparing spawn area: 98%
+[11:34:16] [Server thread/INFO]: Preparing start region for level 2 (Seed: 5341858161430061242)
+[11:34:17] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[11:34:17] [Server thread/INFO]: Done (17.658s)! For help, type "help" or "?"
+[11:34:20] [Server thread/WARN]: Can't keep up! Did the system time change, or is the server overloaded? Running 2466ms behind, skipping 49 tick(s)

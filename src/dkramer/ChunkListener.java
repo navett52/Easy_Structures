@@ -514,7 +514,7 @@ public class ChunkListener implements Listener {
      * @param y coordinate
      */
     public void NoDefaultTrees(Vector y){
-    	if(villageExistance() == false)
+    	if(villageExistence() == false)
     	{
     		while (y.equals("air")){
     			baseHeight--;
@@ -536,7 +536,7 @@ public class ChunkListener implements Listener {
      * @return boolean doorExistance, the deciding factor of a village's existence is a door, so if
      * a door is found, that means it's a village
      */
-    public boolean villageExistance()
+    public boolean villageExistence()
     {		
     	//declares the boolean to be returned for the value of the method, defaults to false
     	boolean doorExistence = false;

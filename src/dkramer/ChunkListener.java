@@ -514,9 +514,7 @@ public class ChunkListener implements Listener {
      * @param y coordinate
      */
     public void NoDefaultTrees(Vector y){
-    	ChunkListener chunk = new ChunkListener();
-    	boolean village = chunk.villageExistance();
-    	if(village == false)
+    	if(villageExistance() == false)
     	{
     		while (y.equals("air")){
     			baseHeight--;
@@ -556,7 +554,8 @@ public class ChunkListener implements Listener {
 					//checks the block material to see if it is a door
 					if(material == Material.ACACIA_DOOR || material == Material.WOOD_DOOR || 
 					   material == Material.SPRUCE_DOOR || material == Material.BIRCH_DOOR || 
-					   material == Material.JUNGLE_DOOR || material == Material.DARK_OAK_DOOR)
+					   material == Material.JUNGLE_DOOR || material == Material.DARK_OAK_DOOR ||
+					   material == Material.WHEAT)
 					{
 						//if the block is a door, it changes doorExistence to true
 						doorExistence = true;

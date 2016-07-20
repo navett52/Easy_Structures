@@ -296,14 +296,22 @@ public class ChunkListener implements Listener {
      * @return True if chunkChance from the plugin config is greater than a random number between 0-100, false otherwise.
      */
     public boolean chunkChance() {
-        if(rand.nextInt(100) + 1 > plugin.getConfig().getInt("chunkchance")) {
-        	if (plugin.getConfig().getBoolean("debug") == true)
-        	{
-        		WorldFeatures.log.info("Not going to load schematics in newly created chunk");
-        	}
-            return false;
-        }
-		return true;
+    	boolean ChunkChance = false;
+    	int configChunkChance = plugin.getConfig().getInt("cunkchance");
+    	while(configChunkChance > 0)
+    	{
+    		if(rand.nextInt(100) + 1 > configChunkChance) {
+    			if (plugin.getConfig().getBoolean("debug") == true)
+    			{
+    				WorldFeatures.log.info("Not going to load schematics in newly created chunk");
+    			}
+    			ChunkChance = false;
+    		}
+    		ChunkChance = true;
+    		
+    		configChunkChance = configChunkChance - 100;
+    	}
+    	return ChunkChance;
     }
     
     /**

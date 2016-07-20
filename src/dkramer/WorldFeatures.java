@@ -1,57 +1,68 @@
+/*
+ * Easy Structures Minecraft plugin main class
+ * Coded by __________ development team
+ * Credit for template code to dkramer https://github.com/robotnikthingy/WorldSchematics
+ */
+
 package dkramer;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Logger;
 
-import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.block.Biome;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
-
 public class WorldFeatures extends JavaPlugin {
-	
-	private static WorldFeatures plugin;
-	
+	//Creating a public static instance of this class
 	public static WorldFeatures instance;
+	//Declaring the logger to send info to the console
     public static Logger log;
-    private static final HashMap<Player, PlayerInfo> playerInfos = new HashMap<Player, PlayerInfo>();
+    //Creating a hashmap to hold all of the config files that need to be accessed
     private static final HashMap<String, BetterConfiguration> configs = new HashMap<String, BetterConfiguration>();
-
+    //Declaring a chunk listener
     public ChunkListener c1;
+    //Declaring a player listener
     public PlayerListener p1;
     
-    
-    public static String defaultCuboidPicker = "SEEDS";
-        
+    /**
+     * Runs when the plugin is disabled
+     */
     public void onDisable() {
+    	//States to the console that this plugin has been disabled
         log.info("Disabled");
     }
-
+    
+    /**
+     * Runs when the plugin is enabled
+     */
     public void onEnable() {
+    	//Grabbing the plugin description file
+		PluginDescriptionFile pdfFile = getDescription();
+		//Instantiating the logger on startup of the plugin
     	log = getLogger();
+    	//Instantiating instance to equal this current instance of the plugin
     	instance = this;
-    	
-    	//Nave's Additions
+    	//Simply sending a message to the console letting them know what version of the plugin they have
+		log.info(pdfFile.getName() + " has been enabled (V." + pdfFile.getVersion() + ")");
+		//Creating the folder structure for the plugin
         createFolders();
-    	//End Nave's Additions
-    	
-        //Confusing stuff to pass this to that to this and back
+        //Making this instance aware of the new instances of c1 and p1
+        //and making c1 and p1 aware of this specific instance of this class
         c1 = new ChunkListener(this);
         p1 = new PlayerListener(this);
-
         getServer().getPluginManager().registerEvents(new ChunkListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        //Setting a scheduled event to save config files
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 				saveAllConfigs();
@@ -60,6 +71,70 @@ public class WorldFeatures extends JavaPlugin {
         this.saveDefaultConfig();
     }
     
+    /**
+	 * Runs when a command (anything with a / before it) is run in the Console or MC Chat
+	 * sender: Whatever issues the command (ex. Player, Console, etc..)
+	 * command: The command that needs to be entered
+	 * label: The string entered into console or chat (ex. /a command goes here)
+	 * args: String array to hold arguments for a command (ex. /set <- the command /set |color purple| <- args... i think)
+	 * @author Evan Tellep
+	 */
+	@Override
+	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+		//A command to allow world creators to regenerate chunks that have been generated without schematics in the appropriate folders
+		//Will most likely crash the server, but the chunks do seem to regenerate
+		if (command.getName().equalsIgnoreCase("populate")) {
+			//Currently this command may only be ran by a player, but I might be able to change that
+			if (sender instanceof Player) {
+				//Casting sender to player since the previous if statement makes sure it is
+				Player player = (Player) sender;
+				//Grabbing all the chunk files within the specific folder of the world the player is in
+				String[] chunkFiles = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + player.getWorld().getName()).list();
+				//For every chunk file, checks the property of populated
+				for (int i = 0; i < chunkFiles.length; i ++) {
+					//grabbing a specific file
+					File chunkFile = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + player.getWorld().getName() + "/" + chunkFiles[i]);
+					//Attempting to use a buffer reader to read the line
+					try {
+						//Instantiating a buffered reader using a file reader being instantiated with the grabbed file
+						BufferedReader br = new BufferedReader(new FileReader(chunkFile));
+						//Reading the first (and only) line of the file
+						String line = br.readLine();
+						//Converting the String value into a boolean
+						boolean beenPopulated = Boolean.parseBoolean(line.substring(11));
+						//If the value is false, meaning the chunk has not yet tried to be populated using the plugin it regenerates the chunk
+						if (beenPopulated == false) {
+							//Grabbing the X coordinate of the chunk from the name of the file
+							int chunkX = Integer.parseInt(chunkFiles[i].substring(chunkFiles[i].indexOf('_') + 1, chunkFiles[i].indexOf(',')));
+							//Grabbing the Z coordinate of the chunk from the name of the file
+							int chunkZ = Integer.parseInt(chunkFiles[i].substring(chunkFiles[i].indexOf(',') + 1, chunkFiles[i].indexOf('.')));
+							//Using player to get the world to regen the chunk, but I should be able to throw in an arg to allow someone from console
+							//to specify a world to re-populate
+							player.getWorld().regenerateChunk(chunkX, chunkZ);
+						}
+						//Attemtpting to close the buffered reader
+						br.close();
+					} catch (IOException e) {
+						//If the error is thrown catch it here and print the localized message and it's stack trace
+						System.out.println(e.getLocalizedMessage());
+						e.printStackTrace();
+					}
+				}
+			}
+			//If the sender is not an instance of player let them know.
+			System.out.println("You must be a player to use this command!");
+		}
+		//An Attempt to make a command to allow server admin to create folders for a world
+		if (label.equalsIgnoreCase("makefolders")) {
+			c1.genFolders(args[0]);
+			return true;
+		}
+		return false;
+	}
+    
+	/**
+	 * Saves the configs
+	 */
     private void saveAllConfigs() {
     	//log.info("Saving Information...");
     	for(BetterConfiguration config : configs.values()) {
@@ -68,6 +143,11 @@ public class WorldFeatures extends JavaPlugin {
     	//log.info("Done Saving!");
     }
     
+    /**
+     * GRabs a file and adds it to the config hashmap
+     * @param path The path of the file to become a BetterConfiguration object
+     * @return The file which is now a BetterConfiguration object
+     */
     public static BetterConfiguration getConfig(String path) {
     	if(!configs.containsKey(path)) {
     		BetterConfiguration config = new BetterConfiguration(path + ".yml");
@@ -75,39 +155,6 @@ public class WorldFeatures extends JavaPlugin {
     		configs.put(path, config);
     	}
     	return configs.get(path);
-    }
-    
-    
-    public static PlayerInfo getPlayerInfo(Player player) {
-    	if(!playerInfos.containsKey(player)) {
-    		playerInfos.put(player, new PlayerInfo());
-    	}
-    	return playerInfos.get(player);
-    }
-
-	private void saveArea(World world, Vector origin, Vector size, File file) {
-        EditSession es = new EditSession(new BukkitWorld(world), 0x30d40);
-        CuboidClipboard cc = new CuboidClipboard(origin, size);
-        cc.copy(es);
-        try {
-        	MCEditSchematicFormat.MCEDIT.save(cc, file);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private String getErrorMessage(boolean left) {
-    	String error = (new StringBuilder())
-    			.append(ChatColor.YELLOW)
-    			.append("You need a corner! To select it, wield ")
-    			.append(this.getConfig().getString("wandmaterial").toLowerCase().replaceAll("_", " ")).toString();
-    	error += left ? " and left click." : " and right click.";
-    	return error;
-    }
-    
-    //Nave
-    public static List<World> getWorlds() {
-    	return plugin.getServer().getWorlds();
     }
     
     /**
@@ -148,9 +195,6 @@ public class WorldFeatures extends JavaPlugin {
     
 	/**
 	 * Creates folders to hold schematics to be generated into the world
-	 * @return 0 if every folder has been created
-	 * @return 1 if some folders have been created
-	 * @return 2
 	 * @author Evan Tellep
 	 */
 	public static void createFolders() {
@@ -163,65 +207,10 @@ public class WorldFeatures extends JavaPlugin {
 		ArrayList<Biome> biomes = new ArrayList<Biome>(Arrays.asList(Biome.values()));
 		//Creating an ArrayList<> to hold all the world names
 		ArrayList<String> worlds = new ArrayList<String>(instance.getWorldFolders());
-	
-		//**********************DEBUGGING**********************\\
-		
-		    //List<World> worlds = new ArrayList<World>(getWorlds());
-		    //log.info(worlds.size());
-		
-		    //ArrayList<WorldServer> worlds = new ArrayList<WorldServer>(MinecraftServer.getServer().worldServer);
-		    //log.info(worlds.size());
-		    //ArrayList<MultiverseWorld> mvworlds = new ArrayList<MultiverseWorld>(worldmanager.getMVWorlds());
-		    //log.info(mvworlds.isEmpty());
-		    //CraftServer server1 = new CraftServer(server, server.getPlayerList());
-		    //ArrayList<World> worlds2 = (ArrayList<World>) server1.getWorlds();
-		    //log.info(worlds2.size()); //prints 0
-			/*
-			for (World w1 : Bukkit.getWorlds()) {
-				log.info(w1.getName());//prints null
-			}
-			
-			log.info(Bukkit.getName());//prints server name (CraftBukkit i think)
-			
-			log.info(Bukkit.getServer().getName());//prints server name (CraftBukkit i think)
-			
-			log.info(Bukkit.getWorld("world"));//prints null
-			
-			for (World worlds1 : Bukkit.getWorlds()) {
-				log.info(worlds1.getName()); //prints nothing
-			}
-			
-			for (int i = 0; i < biomes.size(); i++) {
-				log.info(biomes.get(i));  //Successful: Prints all biome names; un-needed
-			}
-			
-			for (int i = 0; i < worlds.size(); i++) {
-				log.info(worlds.get(i));//prints nothing
-			}
-			
-			log.info(worlds.size());//prints 0
-			
-			log.info(Bukkit.getWorlds().toString());//gives [] 
-			
-			log.info(Bukkit.getWorlds().size());//prints 0
-			
-			log.info(Bukkit.getWorlds().size());//prints 0
-			
-			//Failed attempt at using Multiverse
-			MultiverseCore mvc = new MultiverseCore();
-			Collection<MultiverseWorld> mvw = new ArrayList<MultiverseWorld>();
-			mvw = mvc.getMVWorldManager().getMVWorlds();
-			log.info(mvw.size());
-			MultiverseWorld[] mvwa = new MultiverseWorld[mvw.size()];
-			mvw.toArray(mvwa);
-			log.info(mvwa.length);
-			for (int i = 0; i < mvwa.length; i++) {
-				log.info(mvwa[i]);
-			}
-			*/
-		//**********************DEBUGGING**********************\\
-		
-		
+		for (int i = 0; i < worlds.size(); i++) {
+			File chunkFolder = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + worlds.get(i));
+			chunkFolder.mkdirs();
+		}
 		/*
 		 * Creates the file structure locally so the Structure file will be in the same location as the server file.
 		 * When making the generator method we can seek the file paths locally.
@@ -263,5 +252,4 @@ public class WorldFeatures extends JavaPlugin {
 			log.info("No folders generated. The folders might have already been made.");
 		}
 	}
- 
 }

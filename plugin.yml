@@ -1,9 +1,11 @@
-name: WorldSchematics
+name: Easy_Structures
 main: dkramer.WorldFeatures
-version: 0.2
-author: WorldSchematics
+version: 0.10
+author: Easy_Structures
 load: startup
-description: Spawns .schematics into newly generated chunks.
-website: https://github.com/robotnikthingy/WorldSchematics
+description: A plugin to spread custom schematics throughout your world.
+website: https://github.com/navett52/Easy_Structures
 commands:
+  populate:
+    description: Re-populates chunks that haven't been populated by the plugin
 permissions:

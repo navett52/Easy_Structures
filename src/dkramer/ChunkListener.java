@@ -140,12 +140,19 @@ public class ChunkListener implements Listener{
         height = cc.getHeight();
         //Using the offSet Vector setting the schem's offest to 0
         cc.setOffset(offSet);
+        Vector offsetToMid = new Vector((-width / 2), 0, (-length / 2));
+        cc.setOffset(offsetToMid);
         //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
         randomRotate(worldSchematicConfig, cc);
         //Checking config to see where place is set to and positions the schematic in that place
         boolean canSpawn = placeToSpawn(worldSchematicConfig, maxHeight);
         //If canSpawn is true, the schematic will paste
-        spawn(canSpawn, worldSchematicConfig);
+        Block spawnLocation = spawn(canSpawn, worldSchematicConfig);
+        //System.out.println(spawnLocation.getType().toString());
+        //System.out.println("Spawned the schematic (right before masking)");
+        //System.out.println("The return of the spawn() method: " + spawnLocation.getX() + " , " + spawnLocation.getY() + " , " + spawnLocation.getZ());
+        masking(spawnLocation.getX(), spawnLocation.getY(), spawnLocation.getZ(), Material.DIAMOND_BLOCK);
+        //System.out.println("After masking");
 //////////////////////////////End of the world's schematics////////////////////////////////////////////
 //////////////////////////////Getting the biome schematics/////////////////////////////////////////////
         //Setting the path to look in the biome folder of the biome the block is currently in
@@ -567,7 +574,7 @@ public class ChunkListener implements Listener{
      * @param canSpawn Whether or not the schematic can spawn.
      * @param schematicConfig The configuration file of the schematic to be spawned.
      */
-    public void spawn(boolean canSpawn, BetterConfiguration schematicConfig) {
+    public Block spawn(boolean canSpawn, BetterConfiguration schematicConfig) {
 	    if(canSpawn) {
 	    	if (plugin.getConfig().getBoolean("showspawnedlocation") == true)
 	    	{
@@ -582,9 +589,63 @@ public class ChunkListener implements Listener{
 	    	}
 	        loadArea(world, new Vector(chunkX + randX, (baseHeight + 1) - schematicConfig.getInt("basementdepth", 0), chunkZ + randZ), pasteNone);
 	        schematicConfig.set((new StringBuilder("spawns.")).append(world.getName()).toString(), schematicConfig.getInt((new StringBuilder("spawns.")).append(world.getName()).toString(), 0) + 1);
-	        return;
 	    }
-    }	
+	    return loadBlockInChunk((randX),((baseHeight + 1) - schematicConfig.getInt("basementdepth", 0)),(randZ));
+    }
+    
+    /**
+     * Masking allows you to fill your schematic with a non-natural block in place of air, that way
+     * after the schematic spawns nothing appears inside of it. Helpful if you are spawning houses
+     * and are afraid trees might show up in it or it might spawn partially inside of a hill.
+     * @param x The x coordinate of the origin block.
+     * @param y The y coordinate of the origin block.
+     * @param z The z coordinate of the origin block.
+     * @param maskingValue The material you are using for masking
+     * @author Evan Tellep
+     */
+    public void masking(int x, int y, int z, Material maskingValue) {
+    	/*
+    	 * Due to randomRotate sometimes the length/width values are negative
+    	 * so this logic is to make sure they are always positive.
+    	 */
+    	if (length < 0) {
+    		length = length * -1;
+    	}
+    	if (width < 0) {
+    		width = width * -1;
+    	}
+    	/*
+    	 * Since the origin is in the middle of the schematic I have to use the origin as a reference and move
+    	 * to the corner block to allow me to easily cycle through the entire schematic.
+    	 */
+    	x = x + (length / 2) + 1;
+    	z = z + (width / 2) + 1;
+    	/*
+    	 * This is the series of for loops used to cycle through the schematic.
+    	 */
+    	for (int i = 0; i < length; i++){
+    			x--;
+    		for (int j = 0; j < width; j++) {
+        			z--;
+    			for (int k = 0; k < height; k++) {
+    				/*
+    				 * Loads a block of the schematic and checks to see if it matches the selected masking
+    				 * material. If it does it replaces the masking material with air.
+    				 */
+    		    	Block temp = loadBlockInChunk(x - chunkX, y, z - chunkZ);
+    		    	if (temp.getType() == maskingValue) {
+    		    		temp.setType(Material.AIR);
+    		    	}
+        		    	y++;
+    			}
+    			//Resetting the Y value back to the bottom of the schematic.
+    			y = y - height;
+    		}
+    		//Resetting the Z value back to the edge of the schematic.
+    		z = z + width;
+    	}
+    }
+    
     /**
      * Turns the default leaves and wood into air
      * @author Jake Reilman

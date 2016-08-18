@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="107.0" prefWidth="577.0" xmlns="http://javafx.com/javafx/8.0.91" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Biome Config Generator" textAlignment="CENTER" BorderPane.alignment="CENTER">
+         <font>
+            <Font size="53.0" />
+         </font>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+      </Text>
+   </top>
+   <center>
+      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <TextField fx:id="chunkChance" promptText="Chunk Chance">
+               <tooltip>
+                  <Tooltip text="Number: The chance that a chunk will spawn a schematic. (If set to 100, the chunk will spawn a schematic. If set to 150 will spawn at least 1 schematic with a %50 chance of spawning another)" />
+               </tooltip>
+               <VBox.margin>
+                  <Insets left="5.0" right="5.0" top="5.0" />
+               </VBox.margin>
+            </TextField>
+         </children>
+      </VBox>
+   </center>
+   <right>
+      <Button fx:id="create" mnemonicParsing="false" onAction="#OnClick" prefHeight="317.0" prefWidth="52.0" text="Create" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </Button>
+   </right>
+</BorderPane>

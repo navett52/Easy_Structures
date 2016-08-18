@@ -6,6 +6,10 @@ load: startup
 description: A plugin to spread custom schematics throughout your world.
 website: https://github.com/navett52/Easy_Structures
 commands:
-  populate:
-    description: Re-populates chunks that haven't been populated by the plugin
+  repopulate:
+    description: Re-populates chunks that haven't been populated by the plugin.
+  notrees:
+    description: Removes default MC trees from a chunk at player location.
+  makefolders:
+    description: Makes the directories to place schematics in for a world.
 permissions:

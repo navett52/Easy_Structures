@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
 import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -83,7 +85,7 @@ public class WorldFeatures extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		//A command to allow world creators to regenerate chunks that have been generated without schematics in the appropriate folders
 		//Will most likely crash the server, but the chunks do seem to regenerate
-		if (command.getName().equalsIgnoreCase("populate")) {
+		if (command.getName().equalsIgnoreCase("repopulate")) {
 			//Currently this command may only be ran by a player, but I might be able to change that
 			if (sender instanceof Player) {
 				//Casting sender to player since the previous if statement makes sure it is
@@ -124,12 +126,24 @@ public class WorldFeatures extends JavaPlugin {
 			//If the sender is not an instance of player let them know.
 			System.out.println("You must be a player to use this command!");
 		}
+		
+		if (command.getName().equalsIgnoreCase("notrees")) {
+			Player player = (Player) sender;
+			player.sendMessage(ChatColor.GOLD + "No trees command has been issued");
+			Chunk chunk = player.getLocation().getChunk();
+			int chunkX = chunk.getX() * 16;
+			int chunkZ = chunk.getZ() * 16;
+			player.sendMessage("You are in chunk: " + chunkX + "," + player.getWorld().getMaxHeight() + "," + chunkZ);
+			c1.noDefaultTrees(chunkX, player.getWorld().getMaxHeight() -1, chunkZ);
+		}
+		
 		//An Attempt to make a command to allow server admin to create folders for a world
-		if (label.equalsIgnoreCase("makefolders")) {
+		if (command.getName().equalsIgnoreCase("makefolders")) {
 			c1.genFolders(args[0]);
 			return true;
+		} else {
+			return false;
 		}
-		return false;
 	}
     
 	/**

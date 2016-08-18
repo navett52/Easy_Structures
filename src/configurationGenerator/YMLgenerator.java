@@ -22,6 +22,7 @@ public class YMLgenerator
 	private String maxHeight;
 	private String randomRotation;
 	private String pasteAir;
+	private String masking;
 	
 	
 	/**
@@ -36,7 +37,7 @@ public class YMLgenerator
 	 * @param randomRotation = determines whether or not you want a schematic randomly rotated when spawning
 	 * @param pasteAir = determines whether or not you want a schematic pasted with air blocks included
 	 */
-	public YMLgenerator(String fileName, String place, String maxSpawns ,String chanceToSpawn ,String basementDepth ,String minHeight, String maxHeight, String randomRotation, String pasteAir)
+	public YMLgenerator(String fileName, String place, String maxSpawns ,String chanceToSpawn ,String basementDepth ,String minHeight, String maxHeight, String randomRotation, String pasteAir, String masking)
 	{
 		//Sets the class level variables to equal the construction values
 		this.fileName = fileName;
@@ -48,6 +49,7 @@ public class YMLgenerator
 		this.maxHeight = maxHeight;
 		this.randomRotation = randomRotation;
 		this.pasteAir = pasteAir;
+		this.masking = masking;
 	}
 	
 	/**
@@ -116,6 +118,11 @@ public class YMLgenerator
 			if(pasteAir != null)
 			{
 				writer.write("pasteschematicair: " + pasteAir);
+				writer.newLine();
+			}
+			if(masking != null)
+			{
+				writer.write("masking: " + masking);
 			}
 		} 
 		catch (IOException e) 

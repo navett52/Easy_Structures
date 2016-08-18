@@ -5,16 +5,20 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkPopulateEvent;
+import org.bukkit.generator.BlockPopulator;
 
 import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
@@ -73,96 +77,140 @@ public class ChunkListener implements Listener{
         int maxHeight = world.getMaxHeight() - 1;
         //Creating a vector to set the offest of the schematic to 0 that way the schematic doesn't paste from where it was copied from like how it normally does
         Vector offSet = new Vector(0, 0, 0);
+        
+        //noDefaultTrees(chunkX, maxHeight, chunkZ);
 //////////////////////////////Getting the world schematics/////////////////////////////////////////// 
         //Creating the file path to be looked into for schematic files to be generated in the world
         String worldPath = "plugins/Easy_Structures/Schematics/" + "/" + world.getName();
+        //Setting the path to look in the biome folder of the biome the block is currently in
+        String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString();
+        
         //Creating arraylist to hold the schematic files from the world folder
 		ArrayList<String> schematicsForWorldGen = new ArrayList<String>();
+        //Instantiating an arraylist to hold the schematics that are inside the biome folder
+		ArrayList<String> schematicsForBiomeGen = new ArrayList<String>();
+		
 		//Getting all files within the worldPath
 		String[] filesInWorldFolder = new File(worldPath).list();
+		//Grabbing all files that are inside the biome folder
+        String[] filesInBiomeFolder = new File(biomePath).list();
+		
         //Automagically generating the file paths for the world if it is new.
 		//Unfortunately it does not automagically populate the folders with schematics
         genFolders(worldPath);  
+        
         //Looks at the list of files in the worldPath and grabs all schematic files
         schematicsForWorldGen = schematicsForGen(filesInWorldFolder);
+        schematicsForBiomeGen = schematicsForGen(filesInBiomeFolder);
+        
+        /*Debug Statement*/
+        if (schematicsForWorldGen.isEmpty() && plugin.getConfig().getBoolean("debug") == true) {
+        	WorldFeatures.log.warning("Did not find any schematics in world folder: " + world.getName() + "!");
+        } else if (schematicsForBiomeGen.isEmpty() && plugin.getConfig().getBoolean("debug") == true) {
+        	WorldFeatures.log.warning("Did not find any schematics in biome folder: " + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString() + "!");
+        }
+        /*Debug Statement*/
+        
         //If there are NOT schematic files in the world folder of the world the chunks are being loaded in prints a message
-        if(schematicsForWorldGen.size() == 0) {
-        	if (plugin.getConfig().getBoolean("debug") == true) {
-        		WorldFeatures.log.info("Did not find any schematics in folder: " + world.getName() + " for chunk " + chunk.getX() +  + chunk.getZ() + "!");
-        	}
+        if(schematicsForWorldGen.isEmpty() && schematicsForBiomeGen.isEmpty()) {
     		File chunkFile = new File("plugins/Easy_Structures/PopulatedChunks/" + "/" + world.getName() + "/" + "chunk_" + chunk.getX() + "," + chunk.getZ() + ".yml");
     		if(!chunkFile.exists()) {
     			createChunkFile("false");
     		}
             return;
+        } else {
+        	createChunkFile("true");
         }
-        createChunkFile("true");
-        //Looks in the plugins config file at chunkChance to determine if this chunk will even spawn anything
-        if(chunkChance() == false) {
-        	return;
-        }
+        
         //Checks the schematics config file to see what the chance is for this schematic to be spawned
         ArrayList<String> chosenWorldSchematics = schematicChance(schematicsForWorldGen, worldPath);
-        //If there are no chosenSchemeNames it returns
-        if(chosenWorldSchematics.isEmpty()) {
-            return;
+        ArrayList<String> chosenBiomeSchematics = schematicChance(schematicsForBiomeGen, biomePath);
+        
+		//Instantiating an ArrayList to hold all of the schematics for generation
+		ArrayList<String> chosenSchematics = chosenWorldSchematics;
+		chosenSchematics.addAll(chosenBiomeSchematics);
+        
+        while (chunkChance() == true) {
+	        
+	        String chosenSchematic = null;
+	        
+	        //Grabs a random schematic from chosenSchemeNames[] and puts it into schemeName
+	        //Not sure why they did it this way
+	        //Seems like they're misrepresenting the spawn rate. I might want to take this out?
+	        if (chosenSchematics.size() > 1) {
+		        chosenSchematic = chosenSchematics.get(rand.nextInt(chosenSchematics.size()));
+	        } else {
+	        	chosenSchematic = chosenSchematics.get(0);
+	        }
+	        
+	        //Grabbing the configuration file for the chosen schematic
+	        String chosenConfig = chosenSchematic.substring(0, chosenSchematic.indexOf('.'));
+	        
+	        BetterConfiguration schematicConfig = WorldFeatures.getConfig(new StringBuilder(worldPath).append("/").append(chosenConfig).toString());
+	        
+	        //Checks configs for maxSpawns. If the schematic has reached its max spawns it exits this method
+	        if(reachedMaxSpawns(schematicConfig) == true) {
+	        	return;
+	        }
+	        
+	        if (worldPath.contains(chosenSchematic)) {
+		        //Loading the schematic to the CuboidClipboard
+		        cc = loadSchematic(worldPath, chosenSchematic);
+	        } else {
+	        	cc = loadSchematic(biomePath, chosenSchematic);
+	        }
+	        
+	        //Getting the width, length, and height of the schematic that was just loaded into the clipboard
+	        width = cc.getWidth();
+	        
+	        //If width and length are even then setting the origin to 0,0 doesn't allow my corner block calculations to work.
+	        //This is a quick fix. If I could figure out which of the 4 center blocks it chooses as it's 0,0 point I could adjust the math
+	        if (width % 2 == 0) {
+	        	width++;
+	        }
+	        
+	        length = cc.getLength();
+	        if (length % 2 == 0) {
+	        	length++;
+	        }
+	        
+	        height = cc.getHeight();
+	        
+	        //Using the offSet Vector setting the schem's offest to 0
+	        cc.setOffset(offSet);
+	        
+	        Vector offsetToMid = new Vector((-width / 2), 0, (-length / 2));
+	        
+	        cc.setOffset(offsetToMid);
+	        
+	        //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
+	        randomRotate(schematicConfig, cc);
+	        
+	        //Checking config to see where place is set to and positions the schematic in that place
+	        boolean canSpawn = placeToSpawn(schematicConfig, maxHeight);
+	        
+	        //If canSpawn is true, the schematic will paste
+	        Block spawnLocation = spawn(canSpawn, schematicConfig);
+	        
+	        masking(spawnLocation.getX(), spawnLocation.getY(), spawnLocation.getZ(), schematicConfig.getString("masking", "SPONGE"));
         }
-        String chosenWorldSchematic = null;
-        //Grabs a random schematic from chosenSchemeNames[] and puts it into schemeName
-        //Not sure why they did it this way
-        //Seems like they're misrepresenting the spawn rate. I might want to take this out?
-        if (chosenWorldSchematics.size() > 1) {
-	        chosenWorldSchematic = chosenWorldSchematics.get(rand.nextInt(chosenWorldSchematics.size()));
-	        System.out.println(chosenWorldSchematics.size());
-        } else {
-        	chosenWorldSchematic = chosenWorldSchematics.get(0);
-        }
-        //Grabbing the configuration file for the chosen schematic
-        String chosenWorldConfig = chosenWorldSchematic.substring(0, chosenWorldSchematic.indexOf('.'));
-        BetterConfiguration worldSchematicConfig = WorldFeatures.getConfig(new StringBuilder(worldPath).append("/").append(chosenWorldConfig).toString());
-        //Checks configs for maxSpawns. If the schematic has reached its max spawns it exits this method
-        if(reachedMaxSpawns(worldSchematicConfig) == true) {
-        	return;
-        }
-        //Loading the schematic to the CuboidClipboard
-        cc = loadSchematic(worldPath, chosenWorldSchematic);
-        //Getting the width, length, and height of the schematic that was just loaded into the clipboard
-        width = cc.getWidth();
-        //If width and length are even then setting the origin to 0,0 doesn't allow my corner block calculations to work.
-        //This is a quick fix. If I could figure out which of the 4 center blocks it chooses as it's 0,0 point I could adjust the math
-        if (width % 2 == 0) {
-        	width++;
-        }
-        length = cc.getLength();
-        if (length % 2 == 0) {
-        	length++;
-        }
-        height = cc.getHeight();
-        //Using the offSet Vector setting the schem's offest to 0
-        cc.setOffset(offSet);
-        Vector offsetToMid = new Vector((-width / 2), 0, (-length / 2));
-        cc.setOffset(offsetToMid);
-        //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
-        randomRotate(worldSchematicConfig, cc);
-        //Checking config to see where place is set to and positions the schematic in that place
-        boolean canSpawn = placeToSpawn(worldSchematicConfig, maxHeight);
-        //If canSpawn is true, the schematic will paste
-        Block spawnLocation = spawn(canSpawn, worldSchematicConfig);
-        //System.out.println(spawnLocation.getType().toString());
-        //System.out.println("Spawned the schematic (right before masking)");
-        //System.out.println("The return of the spawn() method: " + spawnLocation.getX() + " , " + spawnLocation.getY() + " , " + spawnLocation.getZ());
-        masking(spawnLocation.getX(), spawnLocation.getY(), spawnLocation.getZ(), Material.DIAMOND_BLOCK);
-        //System.out.println("After masking");
 //////////////////////////////End of the world's schematics////////////////////////////////////////////
+        
+        
+        
 //////////////////////////////Getting the biome schematics/////////////////////////////////////////////
-        //Setting the path to look in the biome folder of the biome the block is currently in
+/*      //Setting the path to look in the biome folder of the biome the block is currently in
         String biomePath = "plugins/Easy_Structures/Schematics/" + "/" + loadBlockInChunk(randX, baseHeight, randZ).getBiome().toString();
+        
 		//Grabbing all files that are inside the biome folder
         String[] filesInBiomeFolder = new File(biomePath).list();
+        
         //Instantiating an arraylist to hold the schematics that are inside the biome folder
 		ArrayList<String> schematicsForBiomeGen = new ArrayList<String>();
+		
         //Looks at the list of files in the biomePath and grabs all schematic files
         schematicsForBiomeGen = schematicsForGen(filesInBiomeFolder);
+        
         //If there are NOT schematic files in the biome folder of the world the chunks are being loaded in prints a message
         if(schematicsForBiomeGen.size() == 0) {
         	if (plugin.getConfig().getBoolean("debug") == true) {
@@ -170,25 +218,33 @@ public class ChunkListener implements Listener{
         	}
         	return;
         }
+        
         //Checks the schematics config file to see what the chance is for this schematic to be spawned
         ArrayList<String> chosenBiomeSchematics = schematicChance(schematicsForBiomeGen, biomePath);
+        
         //If there are no chosenSchemeNames it returns
         if(chosenBiomeSchematics.isEmpty()) {
             return;
         }
+        
         //Grabs a random schematic from chosenSchemeNames[] and puts it into schemeName
         //Not sure why they did it this way
         //Seems like they're misrepresenting the spawn rate. I might want to take this out?
         String chosenBiomeSchematic = chosenBiomeSchematics.get(rand.nextInt(chosenBiomeSchematics.size()));
+        
         //Grabbing the configuration file for the chosen schematic
         String chosenBiomeConfig = chosenBiomeSchematic.substring(0, chosenBiomeSchematic.indexOf('.'));
+        
         BetterConfiguration biomeSchematicConfig = WorldFeatures.getConfig(new StringBuilder(biomePath).append("/").append(chosenBiomeConfig).toString());
+        
         //Checks configs for maxSpawns. If the schematic has reached its max spawns it exits this method
         if(reachedMaxSpawns(biomeSchematicConfig) == true) {
         	return;
         }
+        
         //Loading the schematic to the CuboidClipboard
         cc = loadSchematic(biomePath, chosenBiomeSchematic);
+        
         //Getting the width, length, and height of the schematic that was just loaded into the clipboard
         width = cc.getWidth();
         if (width % 2 == 0) {
@@ -199,15 +255,19 @@ public class ChunkListener implements Listener{
         	length++;
         }
         height = cc.getHeight();
+        
         //Setting the offSet for the Biome schem to 0
         cc.setOffset(offSet);
+        
         //Checks config for randomRotate. If true, gets a random rotation for the schematic and applies it
         randomRotate(biomeSchematicConfig, cc);
+        
         //Checking config to see where place is set to and positions the schematic in that place
         canSpawn = placeToSpawn(biomeSchematicConfig, maxHeight);
+        
         //If canSpawn is true, the schematic will paste
         spawn(canSpawn, biomeSchematicConfig);
-//////////////////////////////End of the biome schematics///////////////////////////////////////////
+//////////////////////////////End of the biome schematics/////////////////////////////////////////// */
     }
     
     /**
@@ -338,14 +398,20 @@ public class ChunkListener implements Listener{
      * @return True if chunkChance from the plugin config is greater than a random number between 0-100, false otherwise.
      */
     public boolean chunkChance() {
-        if(rand.nextInt(100) + 1 > plugin.getConfig().getInt("chunkchance", 100)) {
-        	if (plugin.getConfig().getBoolean("debug") == true)
-        	{
-        		WorldFeatures.log.info("Chunk Chance: Not going to load schematics in newly created chunk");
-        	}
-            return false;
-        }
-		return true;
+    	int chunkChance = plugin.getConfig().getInt("chunkchance", 100);
+    	while (chunkChance > 0) {
+	        if(rand.nextInt(100) + 1 > chunkChance) {
+	        	if (plugin.getConfig().getBoolean("debug") == true)
+	        	{
+	        		WorldFeatures.log.info("Chunk Chance: Not going to load schematics in newly created chunk");
+	        	}
+	        	chunkChance = chunkChance - 100;
+	            return false;
+	        }
+	        chunkChance = chunkChance - 100;
+			return true;
+    	}
+    	return true;
     }
     
     /**
@@ -398,9 +464,13 @@ public class ChunkListener implements Listener{
         for(int i = 0; i < schematicsInFolder.size(); i++) {
         	String name = schematicsInFolder.get(i);
             BetterConfiguration config = WorldFeatures.getConfig(new StringBuilder(pathToCheckForConfig).append("/").append(name.substring(0, name.indexOf("."))).toString());
-            if(rand.nextInt(100) + 1 <= config.getInt("chance", 50)) {
-            	chosenSchemeNames.add(name);
-            }
+            int chance = config.getInt("chance", 50);
+            while (chance > 0) {
+	            if(rand.nextInt(100) + 1 <= chance) {
+	            	chosenSchemeNames.add(name);
+	            }
+	            chance = chance - 100;
+        	}
         }
 		return chosenSchemeNames;
     }
@@ -472,6 +542,65 @@ public class ChunkListener implements Listener{
     	boolean canSpawn = true;
 	    String place = config.getString("place", "ground");
 	    
+	    switch (place) {
+	    
+		    case "anywhere":
+		    	int minY = config.getInt("anywhereminY", 1);
+		    	int maxY = config.getInt("anywheremaxY", maxHeight);
+		    	baseHeight = rand.nextInt(maxY - minY) + 1 + minY;
+		    	if(baseHeight + height - 1 > maxHeight) {
+		    		canSpawn = false;
+		    	}
+		    	
+		    case "ground":
+		        baseHeight = maxHeight;
+		        int basement = config.getInt("basementdepth", 0);
+		        while(bottomCornerBlocksOr(Material.AIR) || bottomCornerBlocksOr(Material.LEAVES) || bottomCornerBlocksOr(Material.LEAVES_2)
+		        		|| bottomCornerBlocksOr(Material.LOG) || bottomCornerBlocksOr(Material.LOG_2) || bottomCornerBlocksOr(Material.SNOW) 
+		        		|| bottomCornerBlocksOr(Material.LONG_GRASS) || bottomCornerBlocksOr(Material.PACKED_ICE))  {
+		            baseHeight--;
+		        }
+		        if(bottomCornerBlocksOr(Material.STATIONARY_WATER) || bottomCornerBlocksOr(Material.ICE) || bottomCornerBlocksOr(Material.PACKED_ICE) 
+		        		|| baseHeight + height > maxHeight) {
+		            canSpawn = false;
+		            if(loadBlockInChunk(randX, baseHeight, randZ).getBiome() == Biome.SWAMPLAND || loadBlockInChunk(randX, baseHeight, randZ).getBiome() == Biome.MUTATED_SWAMPLAND) {
+		            	while (bottomCornerBlocksOr(Material.STATIONARY_WATER)) {
+		            		baseHeight--;
+		            	}
+		            	canSpawn = true;
+		            }
+		        }
+		        for(int i = 0; i < basement; i++) {
+		        	baseHeight--;
+		        }
+		        
+		    case "air":
+		        baseHeight = maxHeight;
+		        while (loadBlockInChunk(randX, baseHeight, randZ).getType() == Material.AIR) {
+		        	baseHeight--;
+		        }
+		        baseHeight = rand.nextInt(maxHeight - baseHeight) + baseHeight;
+		        if(!bottomCornerBlocksAnd(Material.AIR) || !topCornerBlocksAnd(Material.AIR) || baseHeight + height - 1 > maxHeight) {
+		            canSpawn = false;
+		        }
+		        
+			case "underground":
+		    	while(loadBlockInChunk(randX, baseHeight + height, randZ).getType() != Material.AIR) {
+		    		baseHeight++;
+		    	}
+		        baseHeight--;
+		        baseHeight = rand.nextInt(baseHeight);
+		        if(topCornerBlocksOr(Material.AIR)) {
+		        	while(topCornerBlocksOr(Material.AIR)) {
+		        		baseHeight--;
+		        	}
+		        	baseHeight--;
+		        }
+		        if(baseHeight + height - 1 > maxHeight) {
+		            canSpawn = false;
+		        }
+	    }
+	    /*
 	    if(place.equals("anywhere")) {
 	        int minY = config.getInt("anywhereminY", 1);
 	        int maxY = config.getInt("anywheremaxY", maxHeight);
@@ -521,7 +650,7 @@ public class ChunkListener implements Listener{
 	        if(baseHeight + height - 1 > maxHeight) {
 	            canSpawn = false;
 	        }
-	    }
+	    }*/
 		return canSpawn;
     }
     
@@ -603,7 +732,8 @@ public class ChunkListener implements Listener{
      * @param maskingValue The material you are using for masking
      * @author Evan Tellep
      */
-    public void masking(int x, int y, int z, Material maskingValue) {
+    public void masking(int x, int y, int z, String maskingValue) {
+    	Material maskingMaterialValue = Material.getMaterial(maskingValue);
     	/*
     	 * Due to randomRotate sometimes the length/width values are negative
     	 * so this logic is to make sure they are always positive.
@@ -633,7 +763,7 @@ public class ChunkListener implements Listener{
     				 * material. If it does it replaces the masking material with air.
     				 */
     		    	Block temp = loadBlockInChunk(x - chunkX, y, z - chunkZ);
-    		    	if (temp.getType() == maskingValue) {
+    		    	if (temp.getType() == maskingMaterialValue) {
     		    		temp.setType(Material.AIR);
     		    	}
         		    	y++;
@@ -650,18 +780,31 @@ public class ChunkListener implements Listener{
      * Turns the default leaves and wood into air
      * @author Jake Reilman
      * @param y coordinate
+     * @deprecated Doesn't work due to events occurring during the onChunkPopulate event not being synced. Sometimes the plugin runs second, running this method and removing trees,
+     * sometimes the default MC populators run second, causing the trees to spawn in after this method runs.
      */
-    public void NoDefaultTrees(Vector y){
-    	while (y.equals("air")){
-    		baseHeight--;
-    		}
-    	if (y.equals("leaf") || y.equals("wood")){
-    		while(y.equals("leaf") || y.equals("wood")){
-    			((Block) y).setTypeId(0);
-    			--baseHeight;
-    		}
-    	}    	
+    public void noDefaultTrees(int x, int y, int z) {
+	    for (int i = 0; i < 16; i++){
+			x++;
+			for (int j = 0; j < 16; j++) {
+	    		z++;
+				for (int k = 0; k < world.getMaxHeight() - 1; k++) {
+					/*
+					 * Loads a block of the schematic and checks to see if it matches the selected masking
+					 * material. If it does it replaces the masking material with air.
+					 */
+			    	Block temp = loadBlockInChunk(x - chunkX, y, z - chunkZ);
+			    	if (temp.getType() == Material.LEAVES || temp.getType() == Material.LEAVES_2 || temp.getType() == Material.LOG || temp.getType() == Material.LOG_2) {
+			    		temp.setType(Material.AIR);
+			    	}
+	    		    	y--;
+				}
+				//Resetting the Y value back to the bottom of the schematic.
+				y = y + world.getMaxHeight() - 1;
+			}
+			//Resetting the Z value back to the edge of the schematic.
+			z = z - 16;
+		}
     }
-    
 }
 

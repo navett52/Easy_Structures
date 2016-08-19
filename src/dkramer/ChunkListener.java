@@ -784,6 +784,9 @@ public class ChunkListener implements Listener{
      * sometimes the default MC populators run second, causing the trees to spawn in after this method runs.
      */
     public void noDefaultTrees(int x, int y, int z) {
+    	
+    	wait(500);
+    	
 	    for (int i = 0; i < 16; i++){
 			x++;
 			for (int j = 0; j < 16; j++) {
